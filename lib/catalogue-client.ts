@@ -1,13 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { api } from './client-api'
-export type Product={id:string;name:string;category:string;priceTzs:number;priceUsd:number;image:string;stock:number;minQty:number;unit:string;unitSize:number;deposit:number;units:any[];badge?:string}
+import type { ShopProduct } from './shop-utils'
+export type Product = ShopProduct
 export type Line=Product&{qty:number}
-export function toProduct(p:Record<string,any>,unit?:string):Product {const offering=unit?(p.units||[]).find((u:any)=>u.unit===unit)||p:p;return {id:String(p.id),name:p.name,category:p.category,priceTzs:offering.price,priceUsd:offering.price/2650,image:p.image,stock:Math.floor(p.available/offering.unit_size),minQty:p.min_qty,unit:offering.unit,unitSize:offering.unit_size,deposit:offering.deposit,units:p.units||[]}}
+export function toProduct(p:Record<string,any>,unit?:string):Product {const offering=unit?(p.units||[]).find((u:any)=>u.unit===unit)||p:p;return {id:String(p.id),name:p.name,category:p.category,description:p.description||'',volume:p.volume||'',brand:p.brand||'',available:p.available,priceTzs:offering.price,priceUsd:offering.price/2650,image:p.image,stock:Math.floor(p.available/offering.unit_size),minQty:p.min_qty,unit:offering.unit,unitSize:offering.unit_size,deposit:offering.deposit,units:p.units||[]}}
 export function useCatalogue() {
-  const [products,setProducts]=useState<Product[]>([]);const [error,setError]=useState('')
-  useEffect(()=>{api<Record<string,any>[]>('catalogue').then(rows=>setProducts(rows.map(p=>toProduct(p)))).catch(e=>setError(e.message))},[])
-  return {products,error}
+  const [products,setProducts]=useState<Product[]>([]);const [error,setError]=useState('');const [loading,setLoading]=useState(true)
+  useEffect(()=>{api<Record<string,any>[]>('catalogue').then(rows=>setProducts(rows.map(p=>toProduct(p)))).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[])
+  return {products,error,loading}
 }
 export function useShopCart() {
   const [cart,setCart]=useState<Line[]>([]);const [ready,setReady]=useState(false);const [error,setError]=useState('')

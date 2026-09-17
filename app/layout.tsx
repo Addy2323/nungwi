@@ -1,13 +1,15 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './classic.css'
+import { LanguageProvider } from '@/components/language-provider'
 
 export const metadata: Metadata = {
-  title: 'Nungwi Drop — Drinks & Essentials Delivered Fast',
+  title: 'Nungwi Shop — Island Essentials, Delivered',
   description: 'Cold drinks, snacks, and beach essentials delivered across Nungwi and Kendwa in 10–20 minutes.',
   generator: 'v0.app',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Nungwi Drop' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Nungwi Shop' },
   icons: {
     icon: [
       {
@@ -42,10 +44,10 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,900&family=Oooh+Baby&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -1,2 +1,1 @@
-﻿import { redirect } from 'next/navigation'
-export default function Page() { redirect('/dashboard') }
+export { default } from '@/components/storefront'

@@ -10,6 +10,7 @@ import { adjustStock, assignDriver, catalogue, changeStatus, commissionAmount, l
 import { accountData, invite, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion, staffData } from '@/lib/server/platform'
 import { deliveryConfigured, processNotifications, queue, refreshSms } from '@/lib/server/notifications'
 import { csvReport, pdfReport, reportRows } from '@/lib/server/reports'
+import { storeInfo } from '@/lib/store-info'
 
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
@@ -24,6 +25,7 @@ function failure(error:unknown) {
 export async function GET(request:Request) {
   try {
     const url=new URL(request.url);const resource=url.searchParams.get('resource')||'me';const actor=await currentUser()
+    if(resource==='store-info')return NextResponse.json({data:storeInfo()})
     if(resource==='catalogue')return NextResponse.json({data:publicCatalogue(actor)})
     if(resource==='promotions-public')return NextResponse.json({data:all("SELECT * FROM promotions WHERE active=1 AND starts_at<=? AND ends_at>? AND (audience='all' OR audience=?)",now(),now(),actor?.hotel_id?'hotel':'customer').map(p=>({...p,product_ids:JSON.parse(p.product_ids)}))})
     if(resource==='me')return NextResponse.json({data:actor})
