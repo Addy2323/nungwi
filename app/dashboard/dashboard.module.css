@@ -1,5 +1,5 @@
 .dashboard {
-  --orange: #ff5405;
+  --orange: var(--primary);
   --muted: #535968;
   min-height: 100dvh;
   background: radial-gradient(ellipse at 80% 20%, #fff2e4 0%, #fff8ef 45%, #fcf9f5 100%);
@@ -13,7 +13,7 @@
 .topbar { height: 70px; background: #fff; border-bottom: 1px solid #f8e7d9; display: flex; align-items: center; padding: 0 38px; gap: 35px; position: relative; z-index: 40; }
 .brand { display: flex; align-items: center; gap: 13px; text-decoration: none; color: #080808; font-size: 23px; font-weight: 900; white-space: nowrap; }
 .brand b { color: var(--orange); margin-left: 4px; }
-.brandIcon { display: grid; place-items: center; height: 47px; width: 47px; background: linear-gradient(120deg, #ff7015, #ff4c00); border: 1px solid #ff5100; box-shadow: inset 0 0 0 2px #ff8d45; border-radius: 50%; color: white; }
+.brandIcon { display: grid; place-items: center; height: 47px; width: 47px; background: linear-gradient(120deg, #ff7015, #ff4c00); border: 1px solid var(--primary); box-shadow: inset 0 0 0 2px #ff8d45; border-radius: 50%; color: white; }
 .brandIcon svg { width: 32px; height: 32px; stroke-width: 1.8; }
 .search { margin-left: auto; width: min(47vw, 790px); height: 47px; border: 1px solid #e4e1df; background: #faf8f7; border-radius: 30px; padding: 0 19px; display: flex; align-items: center; gap: 15px; }
 .search svg { flex-shrink: 0; }
@@ -38,7 +38,7 @@
 .sidebar nav button { display: flex; align-items: center; gap: 26px; height: 49px; padding: 0 15px; border: 1px solid transparent; border-radius: 12px; background: none; font-size: 16px; color: #101218; text-align: left; }
 .sidebar nav button svg { flex-shrink: 0; stroke-width: 1.8; }
 .sidebar nav button:hover { background: #fff0e3; }
-.sidebar nav .navActive { color: white; background: linear-gradient(110deg, #ff6208, #ff4d00); border-color: #ff6d21; position: relative; font-weight: 600; }
+.sidebar nav .navActive { color: white; background: linear-gradient(110deg, #ff6208, var(--primary)); border-color: #ff6d21; position: relative; font-weight: 600; }
 .sidebar nav .navActive::before { content: ''; position: absolute; left: -18px; height: 100%; top: 0; width: 2px; background: var(--orange); }
 .sidebarArt { margin-top: auto; height: 286px; position: relative; padding-top: 200px; text-align: center; flex-shrink: 0; }
 .sidebarArt > svg { width: 268px; height: 285px; position: absolute; bottom: -9px; left: -58px; color: #f2c898; opacity: .23; stroke-width: .7; transform: rotate(-12deg); }
@@ -56,11 +56,11 @@
 .greeting p { font-size: 19px; color: #30343b; margin-top: 3px; line-height: 1.4; }
 .stockAlert { display: flex; align-items: center; gap: 17px; min-height: 77px; padding: 11px 17px; border: 1px solid #ffc7a1; border-radius: 14px; background: linear-gradient(110deg, #fff0e5, #ffe5d2); box-shadow: inset 0 0 0 1px #fff5ed; flex: 0 1 587px; }
 .stockAlert > svg { width: 54px; height: 54px; flex-shrink: 0; fill: #ff5d0c; color: white; stroke-width: 1.5; filter: drop-shadow(0 0 1px #ff7d39); }
-.stockAlert strong { color: #ff4d00; font-size: 18px; line-height: 1.25; }
+.stockAlert strong { color: var(--primary); font-size: 18px; line-height: 1.25; }
 .stockAlert p { font-size: 15px; color: #3f3c39; line-height: 1.35; margin-top: 1px; }
 .stockAlert button, .orangeButton { border: 1px solid #fff; border-radius: 15px; background: linear-gradient(110deg, #ff6109, #ff4e00); color: white; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 11px 24px; white-space: nowrap; font-size: 16px; font-weight: 600; }
 .stockAlert button { margin-left: auto; }
-.stockAlert button:hover, .orangeButton:hover { background: #ed4d00; }
+.stockAlert button:hover, .orangeButton:hover { background: var(--primary-hover); }
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
 .metric { border: 1px solid #f6e5d7; border-radius: 13px; background: linear-gradient(130deg,#fff,#fffefe); padding: 17px 15px; height: 127px; display: flex; align-items: center; gap: 20px; position: relative; box-shadow: 0 6px 14px #ad703706; }
 .metricIcon { display: grid; place-items: center; width: 75px; height: 75px; border-radius: 50%; background: #ffecde; color: var(--orange); flex-shrink: 0; align-self: flex-start; }
@@ -79,7 +79,7 @@
 .panelHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; margin-bottom: 8px; }
 .panelHeading h2 { font-size: 21px; font-weight: 800; letter-spacing: -.45px; line-height: 1.25; }
 .panelHeading select { border: 1px solid #e3e3e6; border-radius: 11px; background: #fff; padding: 7px 11px; font-size: 13px; color: #2b3040; width: 131px; }
-.panelHeading > button, .tableActions button { display: inline-flex; align-items: center; gap: 11px; color: #ff4d00; background: none; border: 0; font-size: 13px; white-space: nowrap; }
+.panelHeading > button, .tableActions button { display: inline-flex; align-items: center; gap: 11px; color: var(--primary); background: none; border: 0; font-size: 13px; white-space: nowrap; }
 .charts { display: grid; grid-template-columns: 1.96fr 1fr .98fr; gap: 13px; margin-bottom: 14px; }
 .charts > .panel { height: 275px; }
 .revenuePanel { padding: 12px 18px 14px; }
@@ -197,5 +197,5 @@
   .topbar { gap: 10px; padding: 0 12px; }.brand { font-size: 15px; }.headerActions { gap: 14px; }.currency { display: none; }.main { padding-left: 14px; padding-right: 14px; }.greeting h1 { font-size: 29px; }.greeting > svg { width: 33px; }.greeting p { font-size: 12px; }.stockAlert { padding: 10px; gap: 8px; }.stockAlert > svg { width: 31px; height: 31px; }.stockAlert strong { font-size: 13px; }.stockAlert p { font-size: 10px; }.stockAlert button { font-size: 11px; padding: 9px; gap: 5px; border-radius: 10px; }.stockAlert button svg { width: 15px; }.metric { padding: 12px 10px; gap: 8px; }.metricIcon { width: 39px; height: 39px; }.metricIcon svg { width: 25px; }.metric strong { font-size: 24px; }.metric h2 { font-size: 12px; }.metric p { gap: 2px; }.metric p > span:last-child { font-size: 9px; }.positive,.negative { font-size: 12px; }.positive svg,.negative svg { width: 15px; }.panelHeading h2 { font-size: 18px; }.panelHeading > button { font-size: 11px; gap: 5px; }.panelHeading > button svg { width: 15px; }.statusContent { gap: 17px; }.donut { width: 128px; height: 128px; }.donut > div { width: 85px; height: 85px; }.legend button { font-size: 11px; gap: 7px; }.legend small { font-size: 10px; }.legend i { width: 14px; height: 14px; }
 }
 
-.dashboard{--orange:var(--primary);background:var(--bg-main);color:var(--text-main)}.topbar{background:var(--surface);border-color:var(--border-light)}.brand{font-weight:600;font-size:19px}.brand b{color:var(--primary)}.brandIcon{background:var(--primary);box-shadow:none;border:0}.sidebar{background:#f3f2eb;border-color:var(--border-light);overflow-y:auto}.sidebarArt{display:none}.sidebar nav button{border-radius:8px}.sidebar nav button:hover{background:#e8ebe0}.sidebar nav .navActive{background:#324d41;border-color:#324d41;font-weight:500}.sidebar nav .navActive::before{display:none}
+.dashboard{--orange:var(--primary);background:var(--bg-main);color:var(--text-main)}.topbar{background:var(--surface);border-color:var(--border-light)}.brand{font-weight:600;font-size:19px}.brand b{color:var(--primary)}.brandIcon{background:var(--primary);box-shadow:none;border:0}.sidebar{background:#f3f2eb;border-color:var(--border-light);overflow-y:auto}.sidebarArt{display:none}.sidebar nav button{border-radius:8px}.sidebar nav button:hover{background:var(--nav-hover)}.sidebar nav .navActive{background:var(--nav-green);border-color:var(--nav-green);font-weight:500}.sidebar nav .navActive::before{display:none}
 @media(max-width:760px){.topbar{flex-wrap:wrap;height:auto;min-height:70px;padding:12px 16px;gap:10px}.brand{font-size:15px;gap:6px}.brandIcon{display:none}.sidebar{overflow-y:auto;padding-bottom:40px}.main{padding-top:26px}}

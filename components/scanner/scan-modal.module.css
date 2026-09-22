@@ -174,12 +174,12 @@
 }
 
 .primaryBtn {
-  background: #ff5405;
+  background: var(--primary);
   color: #ffffff;
 }
 
 .primaryBtn:hover {
-  background: #e04800;
+  background: var(--primary-hover);
 }
 
 .successBtn {

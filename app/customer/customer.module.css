@@ -1,8 +1,8 @@
-.customer { --orange: #ff5405; }
+.customer { --orange: var(--primary); }
 .customer aside nav button { gap: 17px; font-size: 14px; }
 .headerActions { gap: 25px; margin-left: 12px; }
 .basketButton { background: none; border: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14px!important; }
-.backToShop { display: flex; align-items: center; justify-content: center; gap: 9px; text-decoration: none; color: #ff5405; border: 1px solid #ffd8bb; background: #fff3e7; padding: 12px 8px; border-radius: 11px; font-size: 13px; margin-top: 24px; }
+.backToShop { display: flex; align-items: center; justify-content: center; gap: 9px; text-decoration: none; color: var(--primary); border: 1px solid #ffd8bb; background: #fff3e7; padding: 12px 8px; border-radius: 11px; font-size: 13px; margin-top: 24px; }
 .main { padding-top: 26px; }
 .welcome { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .welcome h1 { font-size: 43px; white-space: normal; overflow-wrap: anywhere; }
@@ -16,13 +16,13 @@
 .demoDivider { padding: 0 1px; }
 .summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 13px; margin-bottom: 17px; }
 .summary article { background: #fff; border: 1px solid #f6e4d5; border-radius: 14px; padding: 17px 19px; display: flex; align-items: center; gap: 20px; }
-.summary article > span { width: 61px; height: 61px; display: grid; place-items: center; color: #ff5405; border-radius: 50%; background: #ffecde; flex-shrink: 0; }
+.summary article > span { width: 61px; height: 61px; display: grid; place-items: center; color: var(--primary); border-radius: 50%; background: #ffecde; flex-shrink: 0; }
 .summary article > span svg { width: 29px; height: 29px; stroke-width: 1.7; }
 .summary small { display: block; font-size: 13px; color: #55555a; }
 .summary strong { display: block; font-size: 30px; font-weight: 800; line-height: 1.25; }
 .summary em { font-size: 16px; font-weight: 500; font-style: normal; }
 .summary p,.summary button { display: flex; align-items: center; gap: 5px; color: #85808a; font-size: 11px; margin-top: 4px; }
-.summary button { background: none; border: 0; padding: 0; color: #ff5405; }
+.summary button { background: none; border: 0; padding: 0; color: var(--primary); }
 .featureGrid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 16px; margin-bottom: 17px; }
 .tracking { padding: 16px 20px; overflow: hidden; }
 .tracking h2 { font-size: 19px; }
@@ -31,9 +31,9 @@
 .trackingInfo > small { font-size: 10px; font-weight: 600; letter-spacing: 1.1px; color: #85838a; }
 .trackingInfo h3 { font-size: 24px; letter-spacing: -.6px; font-weight: 800; margin-top: 5px; }
 .trackingInfo > p { display: flex; align-items: center; gap: 6px; color: #66616a; font-size: 12px; margin-top: 5px; }
-.trackingInfo > p svg { color: #ff5405; flex-shrink: 0; }
+.trackingInfo > p svg { color: var(--primary); flex-shrink: 0; }
 .arrival { display: flex; align-items: center; gap: 10px; margin: 15px 0; }
-.arrival > svg { color: #ff5405; }
+.arrival > svg { color: var(--primary); }
 .arrival span { font-size: 11px; color: #6d6670; }
 .arrival strong { display: block; font-size: 17px; color: #171313; }
 .trackingInfo .orangeLink { padding: 9px 16px; font-size: 12px; }
@@ -50,7 +50,7 @@
 .progress > div:not(:last-child)::after { content: ''; height: 2px; background: #ffe2ce; flex: 1; margin: 0 12px; }
 .progress span { width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; color: #b8b3b0; background: #f6f4f2; flex-shrink: 0; }
 .progress small { font-size: 10px; color: #9a9593; white-space: nowrap; }
-.progress .stepDone span { color: #ff5405; background: #fff0e2; }
+.progress .stepDone span { color: var(--primary); background: #fff0e2; }
 .progress .stepDone small { color: #716154; }
 .beachCard { position: relative; border-radius: 15px; overflow: hidden; min-height: 290px; color: #fff; background: #4b3b25; }
 .beachCard > img { position: absolute; width: 100%; height: 100%; object-fit: cover; object-position: 20% center; }
@@ -67,11 +67,11 @@
 .ordersTable td { font-size: 11px; height: 43px!important; }
 .ordersTable th { font-size: 11px!important; }
 .textButton { border: 0; padding: 0; background: none; color: #232127; font-size: inherit; }
-.textButton:hover { color: #ff5405; }
-.reorder { display: flex; align-items: center; gap: 6px; border: 0; background: none; color: #ff5405; font-size: 11px!important; padding: 0; }
+.textButton:hover { color: var(--primary); }
+.reorder { display: flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--primary); font-size: 11px!important; padding: 0; }
 .locationGrid { display: grid; gap: 14px; }
 .locationCard { display: flex; gap: 12px; padding: 15px 12px; background: #fffaf5; border: 1px solid #f8e9dd; border-radius: 11px; }
-.locationIcon { width: 38px; height: 38px; background: #ffebda; color: #ff5405; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+.locationIcon { width: 38px; height: 38px; background: #ffebda; color: var(--primary); border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
 .locationIcon svg { width: 21px; }
 .locationCard h3 { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; }
 .locationCard h3 small { font-size: 8px; letter-spacing: .5px; padding: 3px 6px; border-radius: 4px; background: #ffead7; color: #d87b3c; }
@@ -87,17 +87,17 @@
 .productImage img { height: 100%; width: 100%; object-fit: cover; object-position: center 44%; }
 .productImage > button { position: absolute; top: 9px; right: 9px; background: #fff; border: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; }
 .productDetails { position: relative; padding: 10px 13px; }
-.productDetails > small { display: block; text-transform: uppercase; font-size: 8px; font-weight: 600; color: #ff5405; letter-spacing: 1px; }
+.productDetails > small { display: block; text-transform: uppercase; font-size: 8px; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
 .productDetails h3 { font-size: 15px; font-weight: 600; margin-top: 1px; }
 .productDetails > strong { display: block; margin-top: 6px; font-size: 12px; }
-.productDetails > button { position: absolute; bottom: 12px; right: 13px; width: 30px; height: 30px; background: #ff5405; color: white; display: grid; place-items: center; border: 0; border-radius: 50%; }
+.productDetails > button { position: absolute; bottom: 12px; right: 13px; width: 30px; height: 30px; background: var(--primary); color: white; display: grid; place-items: center; border: 0; border-radius: 50%; }
 .empty { grid-column: 1/-1; padding: 30px 10px; font-size: 13px; color: #8c7b70; text-align: center; }
-.browseLink { color: #ff5405; display: inline-flex; align-items: center; gap: 9px; margin-top: 25px; text-decoration: none; }
-.offer { max-width: 740px; border: 1px solid #ffccaa; background: linear-gradient(120deg,#fffaf4,#ffe0c5); border-radius: 20px; padding: 35px; color: #ff5405; }
+.browseLink { color: var(--primary); display: inline-flex; align-items: center; gap: 9px; margin-top: 25px; text-decoration: none; }
+.offer { max-width: 740px; border: 1px solid #ffccaa; background: linear-gradient(120deg,#fffaf4,#ffe0c5); border-radius: 20px; padding: 35px; color: var(--primary); }
 .offer > small { display: block; font-size: 10px; letter-spacing: 1px; margin-top: 20px; }
 .offer h2 { font-weight: 900; font-size: 45px; color: #15110e; line-height: 1.1; margin-top: 15px; }
 .offer p { font-size: 16px; color: #695141; margin: 20px 0; }
-.help > svg { color: #ff5405; margin: 10px 0; }
+.help > svg { color: var(--primary); margin: 10px 0; }
 .help > h2 { font-size: 28px; font-weight: 800; }
 .help > p { margin: 8px 0 25px; color: #75685f; }
 .help details { border-top: 1px solid #f0e5dd; padding: 18px 0; }

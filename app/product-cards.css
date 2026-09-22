@@ -54,12 +54,12 @@
 .storefront .card-product .stock-label {
   padding: 4px 8px;
   border-radius: 6px;
-  background: #edf3ec;
+  background: var(--success-bg);
   font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
 }
-.storefront .card-product .stock-label.unavailable { background: #f6ece4; }
+.storefront .card-product .stock-label.unavailable { background: var(--danger-bg); }
 .storefront .product-name {
   font-size: 18px;
   font-weight: 600;

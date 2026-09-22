@@ -9,11 +9,12 @@ export function useAlerts() {
   async function fire(options: SweetAlertOptions) {
     // Let React finish closing/opening a form before choosing the popup's parent.
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    const palette = getComputedStyle(document.documentElement)
     return Swal.fire({
       // Native modal dialogs occupy the browser's top layer. Keep alerts inside it.
       target: document.querySelector<HTMLDialogElement>('dialog[open]') || document.body,
-      confirmButtonColor: '#ff5405',
-      cancelButtonColor: '#59665e',
+      confirmButtonColor: palette.getPropertyValue('--primary').trim(),
+      cancelButtonColor: palette.getPropertyValue('--nav-green').trim(),
       confirmButtonText: t('OK', 'Sawa'),
       cancelButtonText: t('Cancel', 'Ghairi'),
       closeButtonAriaLabel: t('Close', 'Funga'),

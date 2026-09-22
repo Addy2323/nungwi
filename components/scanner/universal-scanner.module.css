@@ -215,7 +215,7 @@
 }
 
 input:checked + .slider {
-  background-color: #ff5405;
+  background-color: var(--primary);
 }
 
 input:checked + .slider:before {
@@ -252,13 +252,13 @@ input:checked + .slider:before {
 }
 
 .primaryBtn {
-  background: #ff5405;
+  background: var(--primary);
   color: #ffffff;
   border: none;
 }
 
 .primaryBtn:hover {
-  background: #e04800;
+  background: var(--primary-hover);
 }
 
 .manualInputBox {
