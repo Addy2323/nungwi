@@ -1,4 +1,5 @@
 'use client'
+import SiteImage from '@/components/site-image'
 
 import { useAlerts } from '@/components/use-alerts'
 import { useState, type FormEvent } from 'react'
@@ -232,7 +233,7 @@ export default function PlatformForm({
                   }}
                 />
                 {image && (
-                  <img
+                  <SiteImage
                     className={styles.imagePreview}
                     src={image}
                     alt={t("Selected product image preview")}

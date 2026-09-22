@@ -4,11 +4,11 @@ import { useEffect } from 'react'
 
 // Content stays visible without JavaScript; only elements entering the viewport animate.
 const targets = [
-  '.hero-card-left > *', '.hero-card-right', '.delivery-checker',
+  '.delivery-checker',
   '.shop-promotions > article', '.section-header', '.catalogue-tools',
   '.category-row', '.card-product', '.shop-footer > div',
   '.checkout-panel', '.checkout-title', '.help-page > section',
-  '.shop-intro-content', '.shop-category-browser',
+  '.shop-category-browser',
 ].join(', ')
 
 export default function SiteMotion() {

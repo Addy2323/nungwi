@@ -1,4 +1,5 @@
 'use client'
+import SiteImage from '@/components/site-image'
 
 import React from 'react'
 import styles from './label-printer.module.css'
@@ -29,7 +30,7 @@ export function LabelPrinter({ product }: LabelPrinterProps) {
         <div className={styles.volume}>{product.volume || '500ml'}</div>
 
         <div className={styles.qrContainer}>
-          <img src={qrSvgUrl} alt="Product QR Code" width={130} height={130} />
+          <SiteImage src={qrSvgUrl} alt="Product QR Code" width={130} height={130} />
         </div>
 
         <div className={styles.codeText}>{displayCode}</div>

@@ -4,7 +4,7 @@
   min-height: 100dvh;
   background: radial-gradient(ellipse at 80% 20%, #fff2e4 0%, #fff8ef 45%, #fcf9f5 100%);
   color: #080a0c;
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: var(--font-main);
   position: relative;
   isolation: isolate;
 }

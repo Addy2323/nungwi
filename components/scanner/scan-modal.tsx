@@ -1,4 +1,5 @@
 'use client'
+import SiteImage from '@/components/site-image'
 
 import React, { useState } from 'react'
 import { UniversalScanner } from './universal-scanner'
@@ -98,9 +99,9 @@ export function ScanModal({
             {/* Modal Body */}
             {scanResult?.found ? (
               <div className={styles.productBody}>
-                <img
+                <SiteImage
                   src={scanResult.product?.image || '/images/mango-coast.png'}
-                  alt={scanResult.product?.name}
+                  alt={scanResult.product?.name || "Scanned beverage"}
                   className={styles.productThumb}
                 />
                 <div className={styles.productDetails}>
