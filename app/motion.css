@@ -1,0 +1,64 @@
+/* Motion uses transform and opacity so page geometry stays stable. */
+@keyframes shop-dialog-in {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes shop-drawer-in {
+  from { opacity: 0; transform: translateX(48px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes shop-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shop-count-pop {
+  0% { transform: scale(.75); }
+  55% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .storefront :is(button, .btn-primary-orange, .account-link),
+  .checkout-main :is(button, .btn-primary-orange), .shop-dialog button {
+    transition: transform 220ms ease, background-color 220ms ease,
+      border-color 220ms ease, color 220ms ease, box-shadow 220ms ease;
+  }
+  .storefront .card-product {
+    transition: transform 350ms ease, box-shadow 350ms ease, border-color 350ms ease;
+  }
+  .storefront .card-img-wrap img, .hero-card-right > img {
+    transition: transform 800ms cubic-bezier(.22, 1, .36, 1);
+  }
+  .btn-primary-orange svg, .text-link svg {
+    transition: transform 250ms ease;
+  }
+  .desktop-navigation a { position: relative; }
+  .desktop-navigation a::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -5px;
+    height: 1px; background: currentColor; transform: scaleX(0);
+    transform-origin: left; transition: transform 220ms ease;
+  }
+  .desktop-navigation a:is(:hover, :focus-visible)::after { transform: scaleX(1); }
+  .storefront button:not(:disabled):active,
+  .storefront .btn-primary-orange:active { transform: scale(.96); }
+  .cart-btn-orange > span { display: inline-block; animation: shop-count-pop 350ms ease; }
+  .shop-dialog[open] { animation: shop-dialog-in 350ms cubic-bezier(.22, 1, .36, 1); }
+  .shop-dialog.cart-dialog[open] { animation-name: shop-drawer-in; animation-duration: 420ms; }
+  .shop-dialog[open]::backdrop { animation: shop-fade-in 300ms ease; }
+  .coverage-result, .cart-line, .empty-products { animation: shop-fade-in 300ms ease; }
+  .checkout-progress li { transition: color 250ms ease, border-color 250ms ease; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .storefront .card-product:hover {
+      transform: translateY(-5px); border-color: #cdbda9;
+      box-shadow: 0 16px 32px #263a3512;
+    }
+    .storefront .card-product:hover .card-img-wrap img { transform: scale(1.055); }
+    .hero-card-right:hover > img { transform: scale(1.035); }
+    .storefront .btn-primary-orange:hover { transform: translateY(-2px); box-shadow: 0 6px 16px #b64e2424; }
+    .btn-primary-orange:hover svg, .text-link:hover svg { transform: translateX(3px); }
+    .storefront .cat-pill:hover { transform: translateY(-2px); }
+    .favourite-button:hover { transform: scale(1.1); color: var(--primary); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+}

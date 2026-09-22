@@ -1,0 +1,15 @@
+.swal2-container { z-index: 10000; }
+.swal2-popup.nungwi-alert {
+  font-family: inherit;
+  border-radius: 20px;
+  color: #27352c;
+}
+.nungwi-alert .swal2-title { font-size: 1.4rem; }
+.nungwi-alert .swal2-styled { border-radius: 10px; font-weight: 600; }
+.nungwi-alert.swal2-toast .swal2-title { font-size: 1rem; }
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup, .swal2-backdrop-show, .swal2-icon, .swal2-icon * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

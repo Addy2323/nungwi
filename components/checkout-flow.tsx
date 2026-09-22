@@ -1,5 +1,7 @@
 'use client'
 
+import { useAlerts } from '@/components/use-alerts'
+
 import { useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Trash2 } from 'lucide-react'
@@ -11,6 +13,7 @@ import ShopFooter from './shop-footer'
 
 export default function CheckoutFlow({ user }: { user: Actor }) {
   const { t, language } = useLanguage()
+  const alerts = useAlerts()
   const { cart, setCart, ready, error: cartError } = useShopCart()
   const [account, setAccount] = useState<any>(null)
   const [quote, setQuote] = useState<any>(null)
@@ -46,7 +49,8 @@ export default function CheckoutFlow({ user }: { user: Actor }) {
       const result = await mutate('order.place', { ...payload(), expected_total: quote.total })
       setOrder(result); setCart([]); sessionStorage.removeItem('nungwi-promo')
       if (values.payment_method === 'card') await pay(result.id)
-    } catch (e) { setError((e as Error).message); setQuote(null) } finally { setBusy(false) }
+      else void alerts.success(t('Your order has been received.', 'Agizo lako limepokelewa.'))
+    } catch (e) { setError((e as Error).message); setQuote(null); await alerts.error((e as Error).message) } finally { setBusy(false) }
   }
   const field = (name: keyof typeof values, label: string, type = 'text', wide = false) => <label className={wide ? 'wide' : ''}>{label}<input name={name} type={type} required={['recipient', 'phone', 'address'].includes(name)} autoComplete={name === 'recipient' ? 'name' : name === 'phone' ? 'tel' : name === 'address' ? 'street-address' : undefined} value={values[name]} onChange={e => { setValues({ ...values, [name]: e.target.value }); setQuote(null) }}/></label>
   return <div className="storefront"><header className="header-bar"><Link className="brand-logo" href="/">NUNGWI <b>SHOP</b></Link><div className="header-actions"><LanguageSelect/><Link href={accountUrl}>{t('My account')}</Link></div></header><main className="checkout-main"><h1 className="checkout-title">{t('A few details. Then, relax.', 'Maelezo machache. Kisha, pumzika.')}</h1><p className="checkout-intro">{t('Your island essentials are almost on their way.', 'Mahitaji yako ya kisiwani yako karibu kuja.')}</p><ol className="checkout-progress" aria-label={t('Checkout progress', 'Hatua za kuagiza')}>{[t('Delivery'), t('Review', 'Ukaguzi'), t('Confirmation', 'Uthibitisho')].map((label, index) => <li key={index} data-active={step === index} data-complete={step > index} aria-current={step === index ? 'step' : undefined}><span>{step > index ? <Check size={14}/> : index + 1}</span>{index === 0 && step === 1 ? <button disabled={busy} onClick={() => setQuote(null)}>{label}</button> : label}</li>)}</ol>

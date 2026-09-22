@@ -1,5 +1,7 @@
 'use client'
 
+import { useAlerts } from '@/components/use-alerts'
+
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { LanguageSelect, useLanguage } from '@/components/language-provider'
@@ -16,6 +18,7 @@ const copy = {
 
 export default function AuthPage({ mode }: { mode: Mode }) {
  const { t } = useLanguage()
+  const alerts = useAlerts()
 
   const [nextPath,setNextPath]=useState('')
   useEffect(()=>{const value=new URLSearchParams(window.location.search).get('next');if(value&&['/checkout','/customer?tab=Support'].includes(value))setNextPath('?next='+encodeURIComponent(value))},[])
@@ -38,9 +41,9 @@ export default function AuthPage({ mode }: { mode: Mode }) {
     const values = Object.fromEntries(new FormData(event.currentTarget))
     try {
       const result = await mutate(mode === 'reset' ? 'auth.reset-request' : mode === 'signup' ? 'auth.signup' : 'auth.login', values)
-      if (result.redirect) { const next=new URLSearchParams(window.location.search).get('next'); window.location.href=next&&['/checkout','/customer?tab=Support'].includes(next)?next:result.redirect }
-      else setMessage(result.message)
-    } catch (error) { setError((error as Error).message) }
+      if (result.redirect) { await alerts.success(mode === 'signup' ? t('Your account is ready.', 'Akaunti yako iko tayari.') : t('You are signed in.', 'Umeingia kwenye akaunti.'), false); const next=new URLSearchParams(window.location.search).get('next'); window.location.href=next&&['/checkout','/customer?tab=Support'].includes(next)?next:result.redirect }
+      else { setMessage(result.message); await alerts.success(result.message, false) }
+    } catch (error) { setError((error as Error).message); await alerts.error((error as Error).message) }
     finally { setBusy(false); setPassword(''); setConfirm('') }
   }
 

@@ -2,7 +2,13 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import './classic.css'
+import './product-cards.css'
+import './motion.css'
+import 'sweetalert2/dist/sweetalert2.min.css'
+import './sweet-alert.css'
 import { LanguageProvider } from '@/components/language-provider'
+import StartupLoader from '@/components/startup-loader'
+import SiteMotion from '@/components/site-motion'
 
 export const metadata: Metadata = {
   title: 'Nungwi Shop — Island Essentials, Delivered',
@@ -40,14 +46,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    // Browser simulators can inject root attributes before React hydrates.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider><StartupLoader /><SiteMotion />{children}</LanguageProvider>
+        <noscript><style>{'#startup-loader { display: none !important; }'}</style></noscript>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

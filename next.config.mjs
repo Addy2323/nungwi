@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['better-sqlite3'],
+  serverExternalPackages: ['pg'],
+  // Runtime storage and credentials are provisioned on the host, never bundled.
+  outputFileTracingExcludes: {
+    '/*': ['./backups/**/*', './data/**/*', './.env*'],
+  },
   images: {
     unoptimized: true,
   },
