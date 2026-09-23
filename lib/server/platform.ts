@@ -190,7 +190,7 @@ export async function staffData(actor: Actor, resource: string) {
     }
     if (resource === 'notifications') {
         permit(actor, ['admin']);
-        return (await all('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 500')).map(({ message, ...row }) => ({ ...row, message: row.channel === 'email' ? 'Account email (secure link hidden)' : message.replace(/confirmation code: \d{6}/gi, 'confirmation code: [hidden]').replace(/https?:\/\/\S*\/delivery\/\S+/g, '[secure delivery link]') }));
+        return (await all('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 500')).map(({ message, sensitive_payload, ...row }) => ({ ...row, message: row.notification_type === 'OTP' ? 'Verification SMS (code hidden)' : row.channel === 'email' ? 'Account email (secure link hidden)' : message.replace(/confirmation code: \d{6}/gi, 'confirmation code: [hidden]').replace(/https?:\/\/\S*\/delivery\/\S+/g, '[secure delivery link]') }));
     }
     if (resource === 'audit') {
         permit(actor, ['admin']);

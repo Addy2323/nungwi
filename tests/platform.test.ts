@@ -7,7 +7,7 @@ import { all, db, id, now, one, run, closeDb, atomic } from '../lib/server/db';
 import { AppError, hash, passwordHash, passwordMatches, publicUser, redeemToken, tokenFor, type Actor } from '../lib/server/auth';
 import { adjustStock, assignDriver, catalogue, changeStatus, commissionAmount, listOrders, orderDetails, paymentTotals, payout, placeOrder, receiveStock, recordPayment } from '../lib/server/orders';
 import { commissionsFor, deleteProduct, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion } from '../lib/server/platform';
-import { confirmDelivery, deliveryDetails } from '../lib/server/delivery';
+import { confirmDelivery, deliveryDetails, progressDelivery } from '../lib/server/delivery';
 import { processNotifications } from '../lib/server/notifications';
 import { csvReport, pdfReport, reportRows } from '../lib/server/reports';
 try { process.loadEnvFile('.env.local') } catch {}
@@ -24,12 +24,15 @@ async function setupDatabase() {
  await testAdmin.query(`SET search_path TO ${testSchema}, pg_catalog`)
  await testAdmin.query(readFileSync('migrations/001_postgres.sql', 'utf8'))
  await testAdmin.query(readFileSync('migrations/002_money_capacity.sql', 'utf8'))
+ await testAdmin.query(readFileSync('migrations/006_sms_notifications.sql', 'utf8'))
 }
 after(async () => {
  await closeDb()
  await testAdmin.query(`DROP SCHEMA ${testSchema} CASCADE`)
  await testAdmin.end()
 })
+process.env.SHOP_LOCATION = 'Test pickup location';
+process.env.SMS_PROVIDER = 'twilio';
 process.env.APP_URL = 'http://localhost:3000';
 delete process.env.TWILIO_ACCOUNT_SID;
 delete process.env.TWILIO_AUTH_TOKEN;
@@ -131,4 +134,23 @@ describe('secure links, outbox, exports and recovery', () => {
       await assert.rejects(run('INSERT INTO users (id,email,name,created_at) VALUES (?,?,?,?)',id(),customer.email.toUpperCase(),'Duplicate',now()), /unique constraint/)
       await assert.rejects(run('INSERT INTO sessions VALUES (?,?,?)',id(),id(),future()), /foreign key/)
     })
+});
+
+it('notifies the complete delivery lifecycle once and consumes stock at pickup only', async()=>{
+ const productId=await product();await stockIn(productId,5);
+ const order=await placeOrder(customer,payload(productId));
+ await changeStatus(admin,order.id,'Confirmed');await changeStatus(admin,order.id,'Preparing');
+ await assignDriver(admin,order.id,{driver_id:driverId,eta:'20 minutes',instructions:'Use reception'});
+ await changeStatus(admin,order.id,'Ready for pickup');
+ const message=(await one("SELECT message FROM notifications WHERE order_id=? AND audience='driver'",order.id))!.message;
+ assert.ok(message.includes('Test pickup location'));assert.ok(message.includes('Test hotel, room 4'));assert.ok(message.includes('+255700000001'));
+ const token=message.match(/\/delivery\/([0-9a-f]{64})/)![1];
+ await progressDelivery(token,'Picked up');
+ assert.equal((await one('SELECT remaining FROM batches WHERE product_id=?',productId))!.remaining,4);
+ await progressDelivery(token,'Out for delivery');await progressDelivery(token,'Driver arriving');
+ assert.equal((await one('SELECT remaining FROM batches WHERE product_id=?',productId))!.remaining,4);
+ await confirmDelivery(token,order.customer_code);await confirmDelivery(token,order.customer_code);
+ for(const type of ['ORDER_CREATED','ORDER_CONFIRMED','ORDER_PROCESSING','DRIVER_ASSIGNED','READY_FOR_PICKUP','ORDER_PICKED_UP','OUT_FOR_DELIVERY','DRIVER_ARRIVING','ORDER_DELIVERED'])assert.equal((await one("SELECT COUNT(*) AS n FROM notifications WHERE order_id=? AND channel='sms' AND audience='customer' AND notification_type=?",order.id,type))!.n,1,type);
+ assert.equal((await one("SELECT COUNT(*) AS n FROM notifications WHERE order_id=? AND notification_type='ADMIN_NEW_ORDER'",order.id))!.n,1);
+ await assert.rejects(()=>progressDelivery(token,'Cancelled'),/Invalid driver action/);
 });

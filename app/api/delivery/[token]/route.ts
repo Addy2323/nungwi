@@ -1,4 +1,4 @@
-import { deliveryDetails, confirmDelivery } from '@/lib/server/delivery';
+import { deliveryDetails, confirmDelivery, progressDelivery } from '@/lib/server/delivery';
 import { AppError, originGuard } from '@/lib/server/auth';
 export const dynamic = 'force-dynamic';
 export async function GET(_request: Request, { params }: {
@@ -18,6 +18,7 @@ export async function POST(request: Request, { params }: {
 }) { try {
     originGuard(request);
     const body = await request.json();
+    if (typeof body.status==='string') return Response.json({data:await progressDelivery((await params).token,body.status)});
     if (typeof body.code !== 'string' || !/^\d{6}$/.test(body.code))
         throw new AppError('Enter the six-digit customer code.');
     return Response.json({ data: (await confirmDelivery((await params).token, body.code)) });

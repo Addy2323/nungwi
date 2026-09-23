@@ -24,6 +24,8 @@ export default function AuthPage({ mode }: { mode: Mode }) {
 
   const [nextPath,setNextPath]=useState('')
   useEffect(()=>{const value=new URLSearchParams(window.location.search).get('next');if(value&&['/checkout','/customer?tab=Support'].includes(value))setNextPath('?next='+encodeURIComponent(value))},[])
+  const [challenge,setChallenge]=useState('')
+  const signupDraft=useRef<Record<string,FormDataEntryValue>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [password, setPassword] = useState('')
@@ -37,16 +39,18 @@ export default function AuthPage({ mode }: { mode: Mode }) {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage('')
-    if (mode === 'signup' && password !== confirm) { setError('Your passwords don’t match. Please try again.'); confirmInput.current?.focus(); return }
+    if (mode === 'signup' && !challenge && password !== confirm) { setError('Your passwords don’t match. Please try again.'); confirmInput.current?.focus(); return }
     setError('')
     setBusy(true)
     const values = Object.fromEntries(new FormData(event.currentTarget))
     try {
-      const result = await mutate(mode === 'reset' ? 'auth.reset-request' : mode === 'signup' ? 'auth.signup' : 'auth.login', values)
+      if(mode==='signup'&&!challenge) signupDraft.current=values
+      const result = challenge ? await mutate('auth.signup-verify',{challenge,code:values.code}) : await mutate(mode === 'reset' ? 'auth.reset-request' : mode === 'signup' ? 'auth.signup' : 'auth.login', values)
+      if(result.challenge) setChallenge(result.challenge)
       if (result.redirect) { await alerts.success(mode === 'signup' ? t('Your account is ready.', 'Akaunti yako iko tayari.') : t('You are signed in.', 'Umeingia kwenye akaunti.'), false); const next=new URLSearchParams(window.location.search).get('next'); window.location.href=next&&['/checkout','/customer?tab=Support'].includes(next)?next:result.redirect }
       else { setMessage(result.message); await alerts.success(result.message, false) }
     } catch (error) { setError((error as Error).message); await alerts.error((error as Error).message) }
-    finally { setBusy(false); setPassword(''); setConfirm('') }
+    finally { setBusy(false); if(mode!=='signup'){setPassword('');setConfirm('')} }
   }
 
   return <div className={styles.page}>
@@ -59,15 +63,18 @@ export default function AuthPage({ mode }: { mode: Mode }) {
           {mode !== 'reset' && <nav className={styles.tabs} aria-label={t("Account access")}><Link href={"/login"+nextPath} aria-current={mode === 'login' ? 'page' : undefined} className={mode === 'login' ? styles.activeTab : ''}>{t("Sign in")}</Link><Link href={"/signup"+nextPath} aria-current={mode === 'signup' ? 'page' : undefined} className={mode === 'signup' ? styles.activeTab : ''}>{t("Create account")}</Link></nav>}
           <span className={styles.welcomeIcon}><Icon size={31}/></span><p className={styles.eyebrow}>{content.eyebrow}</p><h1 id="auth-title">{content.title}</h1><p className={styles.subtitle}>{content.subtitle}</p>
           <form onSubmit={submit} className={styles.form}>
+            <fieldset disabled={!!challenge} hidden={!!challenge} style={{border:0,padding:0,margin:0,display:challenge?'none':'contents'}}>
             {mode === 'signup' && <label htmlFor="full-name">{t("Full name")}<div className={styles.field}><UserRound size={19}/><input id="full-name" name="name" autoComplete="name" placeholder={t("Your full name")} required maxLength={80} pattern=".*\S.*"/></div></label>}
-            {mode === 'signup' && <label htmlFor="phone">{t("Phone number")}<div className={styles.field}><UserRound size={19}/><input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+255…" required pattern="\+[1-9][0-9]{7,14}"/></div></label>}
+            {mode === 'signup' && <label htmlFor="phone">{t("Phone number")}<div className={styles.field}><UserRound size={19}/><input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+255…" required maxLength={20}/></div></label>}
             <label htmlFor="email">{t("Email address")}<div className={styles.field}><Mail size={19}/><input id="email" name="email" type="email" autoComplete="email" placeholder={t("you@example.com")} required maxLength={254}/></div></label>
             {mode !== 'reset' && <label htmlFor="password">{t("Password")}<div className={styles.field}><LockKeyhole size={18}/><input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder={mode === 'signup' ? t("Create a password") : t("Enter your password")} required minLength={mode === 'signup' ? 10 : 1} maxLength={128} value={password} onChange={e => { setPassword(e.target.value); setError(''); setMessage('') }} aria-describedby={mode === 'signup' ? 'password-help' : undefined}/><button type="button" aria-label={showPassword ? t("Hide password") : t("Show password")} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button></div>{mode === 'signup' && <small id="password-help" className={styles.hint}>{t("Use at least 10 characters.")}</small>}</label>}
             {mode === 'signup' && <label htmlFor="confirm-password">{t("Confirm password")}<div className={`${styles.field} ${error ? styles.invalid : ''}`}><LockKeyhole size={18}/><input ref={confirmInput} id="confirm-password" name="confirmPassword" type={showConfirm ? 'text' : 'password'} autoComplete="new-password" placeholder={t("Re-enter your password")} value={confirm} onChange={e => { setConfirm(e.target.value); setError('') }} required minLength={10} maxLength={128} aria-invalid={!!error} aria-describedby={error ? 'password-error' : undefined}/><button type="button" aria-label={showConfirm ? t("Hide confirmation password") : t("Show confirmation password")} onClick={() => setShowConfirm(!showConfirm)}>{showConfirm ? <EyeOff size={19}/> : <Eye size={19}/>}</button></div></label>}
             {mode === 'login' && <div className={styles.formOptions}><span><Check size={14}/>{t(" A little more beach, a little less hassle.")}</span><Link href="/forgot-password">{t("Forgot password?")}</Link></div>}
+            </fieldset>
+            {challenge && <><label>Verification code<div className={styles.field}><input name="code" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required autoFocus/></div></label><button type="button" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{const result=await mutate('auth.signup',signupDraft.current);setChallenge(result.challenge);setMessage(result.message)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}}>Resend code</button><button type="button" onClick={()=>{setChallenge('');setMessage('')}}>Change registration details</button></>}
             {error && <p id="password-error" className={styles.error} role="alert">{t(error)}</p>}
             {message && <p className={styles.message} role="status">{t(message)}</p>}
-            <button type="submit" className={styles.submit} disabled={busy}>{busy ? t("Please wait…") : content.button}<ArrowRight size={19}/></button>
+            <button type="submit" className={styles.submit} disabled={busy}>{busy ? t("Please wait…") : challenge ? 'Verify phone and create account' : content.button}<ArrowRight size={19}/></button>
           </form>
           <p className={styles.switchMode}>{mode === 'reset' ? <Link href={"/login"+nextPath}><ArrowLeft size={15}/>{t(" Back to sign in")}</Link> : mode === 'login' ? <>{t("New to Nungwi Shop? ")}<Link href={"/signup"+nextPath}>{t("Create an account")}</Link></> : <>{t("Already part of the island? ")}<Link href={"/login"+nextPath}>{t("Sign in")}</Link></>}</p>
           <div className={styles.previewEntry}><span>{t("Just taking a look?")}</span><Link href="/shop">{t("Browse the shop ")}<ArrowRight size={16}/></Link></div>

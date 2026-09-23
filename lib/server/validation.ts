@@ -1,6 +1,7 @@
+import { normalizePhone } from '../phone-number'
 import { z } from 'zod'
 export const text = z.string().trim().min(1).max(500)
-export const phone = z.string().trim().regex(/^\+[1-9]\d{7,14}$/, 'Use an international phone number, e.g. +255…')
+export const phone = z.string().transform((value, ctx) => { try { return normalizePhone(value) } catch { ctx.addIssue({code:'custom',message:'Enter a valid phone number, e.g. 0712345678 or +255712345678.'}); return z.NEVER } })
 export const money = z.number().int().min(0).max(1000000000)
 export const quantity = z.number().int().min(1).max(1000000)
 export const unitsInput = z.preprocess((val) => {

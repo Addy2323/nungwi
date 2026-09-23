@@ -5,14 +5,14 @@ try { process.loadEnvFile('.env.local') } catch {}
 const identifier = (value: string) => '"' + value.replaceAll('"', '""') + '"'
 const literal = (value: string) => "'" + value.replaceAll("'", "''") + "'"
 
-async function subsequentMigrations(client: Client, erpOnly = false) {
-  for (const version of erpOnly ? ['005_erp_foundation'] : ['002_money_capacity', '003_tanzania_drinks_scanner', '004_master_drinks_catalog', '005_erp_foundation']) {
+async function subsequentMigrations(client: Client, erpOnly = false, smsOnly = false) {
+  for (const version of smsOnly ? ['006_sms_notifications'] : erpOnly ? ['005_erp_foundation'] : ['002_money_capacity', '003_tanzania_drinks_scanner', '004_master_drinks_catalog', '005_erp_foundation', '006_sms_notifications']) {
     if (!(await client.query('SELECT 1 FROM public.schema_migrations WHERE version=$1', [version])).rowCount) {
       await client.query(await readFile(`migrations/${version}.sql`, 'utf8'))
-      if (version === '005_erp_foundation') {
+      if (version === '005_erp_foundation' || version === '006_sms_notifications') {
         const runtimeRole = decodeURIComponent(new URL(process.env.DATABASE_URL!).username)
         if ((await client.query('SELECT 1 FROM pg_roles WHERE rolname=$1', [runtimeRole])).rowCount) {
-          for (const table of ['suppliers', 'purchase_orders', 'purchase_items', 'purchase_receipts', 'supplier_bills', 'supplier_payments', 'customer_terms', 'customer_invoices', 'finance_reconciliations']) {
+          for (const table of version === '006_sms_notifications' ? ['otp_challenges','sms_campaigns'] : ['suppliers', 'purchase_orders', 'purchase_items', 'purchase_receipts', 'supplier_bills', 'supplier_payments', 'customer_terms', 'customer_invoices', 'finance_reconciliations']) {
             await client.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON public.${identifier(table)} TO ${identifier(runtimeRole)}`)
           }
         }
@@ -37,8 +37,9 @@ async function main() {
     await client.query('CREATE TABLE IF NOT EXISTS public.schema_migrations (version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())')
     const applied = await client.query("SELECT 1 FROM public.schema_migrations WHERE version='001_postgres'")
     const erpOnly = process.argv.includes('--erp-only')
-    if (erpOnly && (!applied.rowCount || !(await client.query("SELECT 1 FROM public.schema_migrations WHERE version='002_money_capacity'")).rowCount)) throw new Error('ERP migration requires the existing 001_postgres and 002_money_capacity migrations.')
-    if (applied.rowCount) { await subsequentMigrations(client, erpOnly); await client.query('COMMIT'); console.log(erpOnly ? 'ERP schema is up to date.' : 'PostgreSQL schema is up to date.'); return }
+    const smsOnly = process.argv.includes('--sms-only')
+    if ((erpOnly || smsOnly) && (!applied.rowCount || !(await client.query("SELECT 1 FROM public.schema_migrations WHERE version='002_money_capacity'")).rowCount)) throw new Error('ERP migration requires the existing 001_postgres and 002_money_capacity migrations.')
+    if (applied.rowCount) { await subsequentMigrations(client, erpOnly, smsOnly); await client.query('COMMIT'); console.log(smsOnly ? 'SMS schema is up to date.' : erpOnly ? 'ERP schema is up to date.' : 'PostgreSQL schema is up to date.'); return }
     const existing = await client.query("SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename<>'schema_migrations'")
     if (existing.rowCount) {
       const columns = await client.query("SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='users'")

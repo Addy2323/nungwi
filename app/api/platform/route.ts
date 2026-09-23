@@ -1,12 +1,13 @@
+import { requestOtp, verifyOtp } from '@/lib/server/otp'
 import { eachAsync } from '@/lib/server/db'
 import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
-import { randomInt, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { all, atomic, audit, id, now, one, run, type Row } from '@/lib/server/db';
 import { AppError, createSession, currentUser, hash, logout, originGuard, passwordHash, passwordMatches, permit, publicUser, redeemToken, requireUser, roles, staff, throttle, tokenFor } from '@/lib/server/auth';
-import { accountInput, date, driverInput, money, phone, quantity, text } from '@/lib/server/validation';
+import { date, money, phone, quantity, text } from '@/lib/server/validation';
 import { adjustStock, assignDriver, catalogue, changeStatus, commissionAmount, listOrders, orderDetails, payout, placeOrder, receiveStock, recordPayment } from '@/lib/server/orders';
 import { accountData, deleteProduct, invite, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion, staffData } from '@/lib/server/platform';
 import { deliveryConfigured, processNotifications, queue, refreshSms } from '@/lib/server/notifications';
@@ -23,7 +24,7 @@ function failure(error: unknown) {
         return NextResponse.json({ error: error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ') }, { status: 400 });
     if (error instanceof Error && 'code' in error && error.code === '23505')
         return NextResponse.json({ error: 'A record with this email, code, SKU or reference already exists.' }, { status: 409 });
-    console.error('[platform]', error instanceof Error ? error.message : 'Request failed');
+    console.error('[platform] Request failed');
     return NextResponse.json({ error: 'Unable to complete this request. Please try again.' }, { status: 500 });
 }
 export async function GET(request: Request) {
@@ -114,13 +115,13 @@ export async function POST(request: Request) {
         const body = JSON.parse(raw);
         const action = z.string().parse(body.action);
         if (action === 'auth.signup') {
-            const input = accountInput.parse(body);
-            (await throttle('signup:global', 100, 3600));
-            (await throttle(`signup:${hash(input.email)}`, 4, 3600));
-            const userId = (await atomic(async () => { if ((await one('SELECT id FROM users WHERE email=?', input.email)))
-                throw new AppError('Unable to create this account. Try signing in or resetting your password.', 409); const userId = id(); (await run('INSERT INTO users (id,email,name,phone,password,created_at) VALUES (?,?,?,?,?,?)', userId, input.email, input.name, input.phone, passwordHash(input.password), now())); (await audit(userId, 'account.created', 'user', userId, {})); return userId; }));
+            return NextResponse.json({data:await requestOtp(body)});
+        }
+        if (action === 'auth.signup-verify') {
+            const input=z.object({challenge:z.string().uuid(),code:z.string().regex(/^\d{6}$/)}).parse(body);
+            const userId=await verifyOtp(input.challenge,input.code);
             await createSession(userId);
-            return NextResponse.json({ data: { redirect: '/customer' } });
+            return NextResponse.json({data:{redirect:'/customer'}});
         }
         if (action === 'auth.login') {
             const input = z.object({ email: z.string().email().transform(v => v.toLowerCase()), password: z.string().min(1).max(128) }).parse(body);
@@ -226,7 +227,7 @@ export async function POST(request: Request) {
                     await run('UPDATE users SET active=?,role=? WHERE id=?', Number(input.active), input.role, user.id);
                 }
                 (await run('DELETE FROM sessions WHERE user_id=?', user.id));
-                (await audit(actor.id, 'user.updated', 'user', user.id, input));
+                (await audit(actor.id, 'user.updated', 'user', user.id, {active:input.active,role:input.role,passwordChanged:!!input.password}));
             }));
         }
         else if (action === 'user.delete') {
@@ -281,21 +282,12 @@ export async function POST(request: Request) {
             (await audit(actor.id, 'profile.updated', 'user', actor.id, {}));
         }
         else if (action === 'phone.send') {
-            if (!actor.phone)
-                throw new AppError('Save a phone number first.');
-            if (!deliveryConfigured('sms'))
-                throw new AppError('Phone verification is unavailable until SMS is configured.', 503);
-            (await throttle(`phone-send:${actor.id}`, 3, 3600));
-            const code = String(randomInt(100000, 1000000));
-            (await run("DELETE FROM tokens WHERE user_id=? AND purpose LIKE 'phone:%'", actor.id));
-            (await run('INSERT INTO tokens VALUES (?,?,?,?,NULL)', hash(`${actor.id}:${actor.phone}:${code}`), actor.id, `phone:${actor.phone}`, new Date(Date.now() + 600000).toISOString()));
-            (await queue({ userId: actor.id, channel: 'sms', recipient: actor.phone, message: `Your Nungwi Shop phone verification code: ${code}. Expires in 10 minutes.`, key: `phone:${actor.id}:${id()}` }));
+            result=await requestOtp({phone:actor.phone,name:actor.name},actor.id);
         }
         else if (action === 'phone.verify') {
-            (await throttle(`phone-verify:${actor.id}`, 6, 900));
-            const code = z.string().regex(/^\d{6}$/).parse(body.code);
-            (await atomic(async () => { const token = (await one('SELECT * FROM tokens WHERE token=? AND user_id=? AND purpose=? AND used_at IS NULL AND expires_at>?', hash(`${actor.id}:${actor.phone}:${code}`), actor.id, `phone:${actor.phone}`, now())); if (!token)
-                throw new AppError('Verification code is incorrect or expired.'); (await run('UPDATE users SET phone_verified=1 WHERE id=?', actor.id)); (await run('UPDATE tokens SET used_at=? WHERE token=?', now(), token.token)); }));
+            const challenge=await one('SELECT id FROM otp_challenges WHERE user_id=? AND phone=? AND used_at IS NULL ORDER BY created_at DESC LIMIT 1',actor.id,actor.phone);
+            if(!challenge) throw new AppError('Request a verification code first.');
+            await verifyOtp(challenge.id,z.string().regex(/^\d{6}$/).parse(body.code),actor.id);
         }
         else if (action === 'address.save') {
             const input = z.object({ id: z.string().optional(), label: text, address: text, is_default: z.boolean().default(false) }).parse(body);
@@ -337,9 +329,9 @@ export async function POST(request: Request) {
         else if (action === 'notifications.retry') {
             permit(actor, ['admin']);
             const message = (await one('SELECT * FROM notifications WHERE id=?', text.parse(body.id)));
-            if (!message || message.status !== 'failed')
+            if (!message || message.status !== 'failed' || message.notification_type === 'OTP')
                 throw new AppError('Only provider-confirmed failures can be retried. Unknown outcomes require reconciliation.');
-            (await run("UPDATE notifications SET status='queued',error=NULL WHERE id=?", message.id));
+            (await run("UPDATE notifications SET status='queued',error=NULL,attempts=0,next_attempt_at=NULL WHERE id=?", message.id));
             (await audit(actor.id, 'notification.retry', 'notification', message.id, {}));
         }
         else if (action === 'settings.save') {

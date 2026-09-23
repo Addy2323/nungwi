@@ -1,7 +1,7 @@
 import { atomic, audit, now, one, run, id } from './db';
 import { AppError, hash, throttle } from './auth';
-import { paymentTotals, syncCommission } from './orders';
-import { orderNotification } from './notifications';
+import { paymentTotals, syncCommission, changeDeliveryStatus } from './orders';
+import { notifyOrder } from './notifications';
 export async function deliveryDetails(token: string) {
     if (!/^[0-9a-f]{64}$/.test(token))
         throw new AppError('Delivery link is invalid or expired.', 404);
@@ -15,10 +15,11 @@ export async function confirmDelivery(token: string, code: string) {
     const details = (await deliveryDetails(token));
     (await throttle(`delivery-code:${details.id}`, 10, 900));
     return (await atomic(async () => {
+        await deliveryDetails(token); // Recheck assignment and expiry under the transaction lock.
         const order = (await one('SELECT * FROM orders WHERE id=?', details.id))!;
         if (order.status === 'Delivered')
             return { message: 'Delivery already confirmed.' };
-        if (order.status !== 'Out for delivery')
+        if (!['Out for delivery','Driver arriving'].includes(order.status))
             throw new AppError('This order has not been dispatched.', 409);
         if (hash(`${order.id}:${code}`) !== order.code_hash)
             throw new AppError('Confirmation code is incorrect.');
@@ -26,7 +27,15 @@ export async function confirmDelivery(token: string, code: string) {
         (await run('INSERT INTO order_history VALUES (?,?,?,?,?,?)', id(), order.id, 'Delivered', 'Confirmed through the assigned driver’s expiring link.', null, now()));
         (await syncCommission(order.id));
         (await audit(null, 'delivery.confirmed', 'order', order.id, { method: 'driver-link' }));
-        (await orderNotification(order.id, `${order.number} delivered. Thank you for shopping with Nungwi Shop.`, `${order.id}:driver-delivered`));
+        await notifyOrder(order.id,'ORDER_DELIVERED');
         return { message: 'Delivery confirmed. Thank you. Payment collection must still be reconciled by the shop.' };
     }));
+}
+
+export async function progressDelivery(token:string,status:string) {
+    return atomic(async()=>{
+        const order=await deliveryDetails(token);
+        await changeDeliveryStatus(order.id,status);
+        return deliveryDetails(token);
+    });
 }

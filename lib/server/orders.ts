@@ -2,9 +2,9 @@ import { eachAsync } from './db'
 import { randomBytes, randomInt } from 'node:crypto';
 import { all, atomic, audit, id, now, one, run, setting, type Row } from './db';
 import { accessibleOrder, AppError, hash, permit, staff, throttle, type Actor } from './auth';
-import { orderInput, ruleInput } from './validation';
-import { orderNotification, queue } from './notifications';
-export const statusSequence = ['Pending', 'Confirmed', 'Preparing', 'Out for delivery', 'Delivered'];
+import { orderInput, ruleInput, phone } from './validation';
+import { orderNotification, notifyOrder, statusEvent } from './notifications';
+export const statusSequence = ['Pending', 'Confirmed', 'Preparing', 'Driver assigned', 'Ready for pickup', 'Picked up', 'Out for delivery', 'Driver arriving', 'Delivered'];
 export async function catalogue(includeArchived = false) {
     return (await all(`SELECT p.*, COALESCE((SELECT SUM(b.remaining-b.reserved) FROM batches b WHERE b.product_id=p.id AND b.expires_at>?),0) AS available, COALESCE((SELECT SUM(b.reserved) FROM batches b WHERE b.product_id=p.id),0) AS reserved FROM products p ${includeArchived ? '' : 'WHERE p.active=1'} ORDER BY p.created_at`, now()));
 }
@@ -122,13 +122,7 @@ export async function placeOrder(actor: Actor, raw: unknown, quoteOnly = false):
                 (await run('INSERT INTO commissions (id,order_id,hotel_id,rule,eligible,expected,created_at) VALUES (?,?,?,?,?,?,?)', id(), orderId, hotel.id, JSON.stringify(rule), subtotal - discount, commissionAmount(subtotal - discount, rule), now()));
         }
         (await history(actor.id, orderId, 'Pending', 'Order placed; stock reserved.'));
-        (await orderNotification(orderId, `Thanks ${input.recipient}. Order ${number} received. Total TZS ${total.toLocaleString('en-US')}. Delivery confirmation code: ${code}. Keep this code for receipt of your order.`, `${orderId}:placed`, false));
-        // Admin notifications intentionally omit the customer's delivery code.
-        for (const admin of (await all("SELECT id,phone FROM users WHERE role='admin' AND active=1"))) {
-            for (const channel of ['dashboard', 'sms'] as const)
-                if (channel === 'dashboard' || admin.phone)
-                    (await queue({ userId: admin.id, audience: 'staff', orderId, channel, recipient: channel === 'sms' ? admin.phone : admin.id, message: `New order ${number} from ${input.recipient}, TZS ${total}. Awaiting confirmation.`, key: `${orderId}:new:${admin.id}:${channel}` }));
-        }
+        await notifyOrder(orderId,'ORDER_CREATED');
         (await audit(actor.id, 'order.created', 'order', orderId, { total }));
         return (await orderDetails(actor, orderId));
     }));
@@ -167,6 +161,13 @@ export async function listOrders(actor: Actor, from = '0000', to = '9999') {
 }
 export async function changeStatus(actor: Actor, orderId: string, status: string, code = '', note = '') {
     permit(actor, ['admin', 'sales', 'delivery']);
+    return changeStatusInternal(actor,orderId,status,code,note);
+}
+export async function changeDeliveryStatus(orderId:string,status:string) {
+    if(!['Picked up','Out for delivery','Driver arriving'].includes(status)) throw new AppError('Invalid driver action.');
+    return changeStatusInternal(null,orderId,status);
+}
+async function changeStatusInternal(actor:Actor|null,orderId:string,status:string,code='',note='') {
     if (status === 'Delivered')
         (await throttle(`delivery-code:${orderId}`, 10, 900));
     return (await atomic(async () => {
@@ -174,11 +175,12 @@ export async function changeStatus(actor: Actor, orderId: string, status: string
         if (!order)
             throw new AppError('Order not found.', 404);
         if (order.status === status)
-            return (await orderDetails(actor, orderId));
-        const allowed: Record<string, string[]> = { Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Preparing', 'Cancelled'], Preparing: ['Out for delivery', 'Cancelled'], 'Out for delivery': ['Delivered', 'Failed delivery'], 'Failed delivery': ['Out for delivery', 'Returned'], Delivered: ['Returned'], Cancelled: [], Returned: [] };
+            return actor ? await orderDetails(actor, orderId) : undefined;
+        const allowed: Record<string, string[]> = { Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Preparing', 'Cancelled'], Preparing: ['Driver assigned', 'Ready for pickup', 'Out for delivery', 'Cancelled'], 'Driver assigned':['Ready for pickup','Out for delivery','Cancelled'], 'Ready for pickup':['Picked up','Out for delivery','Cancelled'], 'Picked up':['Out for delivery','Failed delivery'], 'Out for delivery': ['Driver arriving','Delivered', 'Failed delivery'], 'Driver arriving':['Delivered','Failed delivery'], 'Failed delivery': ['Out for delivery', 'Returned'], Delivered: ['Returned'], Cancelled: [], Returned: [] };
         if (!allowed[order.status]?.includes(status))
             throw new AppError(`Cannot move from ${order.status} to ${status}.`, 409);
-        if (status === 'Out for delivery') {
+        if (['Driver assigned','Ready for pickup','Picked up','Out for delivery','Driver arriving'].includes(status) && !order.driver) throw new AppError('Assign a driver, vehicle and arrival estimate before dispatch.');
+        if (status === 'Out for delivery' || status === 'Picked up') {
             if (!order.driver)
                 throw new AppError('Assign a driver, vehicle and arrival estimate before dispatch.');
             for (const row of (await all("SELECT a.*,b.expires_at,b.cost,i.product_id FROM allocations a JOIN batches b ON b.id=a.batch_id JOIN order_items i ON i.id=a.item_id WHERE i.order_id=? AND a.state='reserved'", orderId))) {
@@ -207,11 +209,11 @@ export async function changeStatus(actor: Actor, orderId: string, status: string
             }
         }
         (await run('UPDATE orders SET status=?,updated_at=? WHERE id=?', status, now(), orderId));
-        (await history(actor.id, orderId, status, note));
+        (await history(actor?.id || null, orderId, status, note));
         (await syncCommission(orderId));
-        (await orderNotification(orderId, `Order ${order.number}: ${status}.${status === 'Delivered' ? ' Thank you for shopping with Nungwi Shop.' : ''}`, `${orderId}:status:${status}:${id()}`));
-        (await audit(actor.id, 'order.status', 'order', orderId, { from: order.status, to: status, note }));
-        return (await orderDetails(actor, orderId));
+        await notifyOrder(orderId,statusEvent[status]);
+        (await audit(actor?.id || null, 'order.status', 'order', orderId, { from: order.status, to: status, note }));
+        return actor ? await orderDetails(actor, orderId) : undefined;
     }));
 }
 export async function assignDriver(actor: Actor, orderId: string, input: {
@@ -225,20 +227,24 @@ export async function assignDriver(actor: Actor, orderId: string, input: {
         const driver = (await one('SELECT * FROM drivers WHERE id=? AND active=1', input.driver_id));
         if (!order || !driver)
             throw new AppError('Choose an existing order and active driver.');
-        if (!['Confirmed', 'Preparing', 'Out for delivery', 'Failed delivery'].includes(order.status))
+        if (!['Confirmed', 'Preparing', 'Driver assigned', 'Ready for pickup', 'Out for delivery', 'Failed delivery'].includes(order.status))
             throw new AppError('Confirm the order before assigning delivery.');
         if (!input.eta.trim())
             throw new AppError('Enter an estimated arrival time or delivery window.');
+        driver.phone = phone.parse(driver.phone);
+        if (!await setting('sms_shop_location',process.env.SHOP_LOCATION||'')) throw new AppError('Configure the shop pickup location in SMS settings before assigning a driver.');
         const assignment = JSON.stringify({ ...driver, eta: input.eta, instructions: input.instructions });
         if (order.driver === assignment)
             return (await orderDetails(actor, orderId));
         const token = randomBytes(32).toString('hex');
         (await run('UPDATE orders SET driver=?,driver_token=?,driver_token_expires=?,updated_at=? WHERE id=?', assignment, hash(token), new Date(Date.now() + 24 * 3600000).toISOString(), now(), orderId));
-        (await history(actor.id, orderId, order.status, `Driver assigned: ${driver.name}; estimated arrival: ${input.eta}.`));
-        (await orderNotification(orderId, `Order ${order.number}: driver ${driver.name}, ${driver.phone}, ${driver.vehicle} ${driver.registration}. Estimated arrival: ${input.eta}.`, `${orderId}:driver:${hash(token)}`));
+        if (order.status === 'Preparing') await run("UPDATE orders SET status='Driver assigned' WHERE id=?",orderId);
+        (await history(actor.id, orderId, order.status === 'Preparing' ? 'Driver assigned' : order.status, `Driver assigned: ${driver.name}; estimated arrival: ${input.eta}.`));
         const due = (await paymentTotals(orderId)).outstanding;
-        const link = process.env.APP_URL ? ` Confirm receipt: ${process.env.APP_URL}/delivery/${token}` : '';
-        (await queue({ audience: 'driver', orderId, channel: 'sms', recipient: driver.phone, message: `${order.number}. Recipient: ${order.recipient}, ${order.phone}. Address: ${order.address}. ${order.instructions} ${input.instructions}. ${order.payment_method === 'cash' ? `Collect TZS ${due}.` : 'Do not collect cash.'} Estimated arrival: ${input.eta}.${link}`, key: `${orderId}:driver-details:${hash(token)}` }));
+        await notifyOrder(orderId,'DRIVER_ASSIGNED',`assignment:${hash(token)}`,{
+            deliveryLink:process.env.APP_URL?`${process.env.APP_URL}/delivery/${token}`:'',
+            deliveryInstructions:`${order.instructions} ${input.instructions}. ${order.payment_method==='cash'?`Collect TZS ${due}.`:'Do not collect cash.'} Estimated arrival: ${input.eta}.`
+        });
         (await audit(actor.id, 'delivery.assigned', 'order', orderId, { driver: driver.name, eta: input.eta }));
         return (await orderDetails(actor, orderId));
     }));

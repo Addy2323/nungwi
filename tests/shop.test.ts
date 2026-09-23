@@ -47,7 +47,7 @@ describe('dashboard presentation rules', () => {
   })
   it('keeps cancelled, returned and failed orders out of the normal active sequence', () => {
     for (const status of ['Cancelled', 'Returned', 'Failed delivery']) assert.deepEqual(orderProgress(status), { index: -1, exception: true })
-    assert.deepEqual(orderProgress('Out for delivery'), { index: 3, exception: false })
-    assert.deepEqual(orderProgress('Delivered'), { index: 4, exception: false })
+    assert.deepEqual(orderProgress('Out for delivery'), { index: 6, exception: false })
+    assert.deepEqual(orderProgress('Delivered'), { index: 8, exception: false })
   })
 })
