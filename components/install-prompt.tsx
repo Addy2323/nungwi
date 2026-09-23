@@ -93,6 +93,7 @@ export default function InstallPrompt() {
               height={56}
               className={styles.appIcon}
               priority
+              unoptimized
             />
             <div className={styles.details}>
               <strong>Nungwi Shop App</strong>
@@ -126,6 +127,7 @@ export default function InstallPrompt() {
               width={72}
               height={72}
               className={styles.appIcon}
+              unoptimized
             />
             <h3>Install on iPhone / iPad</h3>
             <p style={{ fontSize: 13, color: '#555', margin: 0 }}>
