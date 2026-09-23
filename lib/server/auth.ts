@@ -51,12 +51,45 @@ export async function createSession(userId: string) {
 export async function logout() { const jar = await cookies(); const value = jar.get('nungwi_session')?.value; if (value)
     (await run('DELETE FROM sessions WHERE token=?', hash(value))); jar.delete('nungwi_session'); }
 export function originGuard(request: Request) {
-    const origin = request.headers.get('origin');
-    const expected = process.env.APP_URL ? new URL(process.env.APP_URL).origin : new URL(request.url).origin;
-    if (origin !== expected)
-        throw new AppError('This request must come from this website.', 403);
     if (request.headers.get('sec-fetch-site') === 'cross-site')
         throw new AppError('Cross-site request blocked.', 403);
+    const origin = request.headers.get('origin');
+    if (!origin)
+        return;
+    let originHost = '';
+    try {
+        originHost = new URL(origin).hostname.toLowerCase().replace(/^www\./, '');
+    } catch {
+        throw new AppError('This request must come from this website.', 403);
+    }
+    const allowedHosts = new Set<string>();
+    const normalize = (h: string) => h.trim().split(':')[0].toLowerCase().replace(/^www\./, '');
+    const xForwardedHost = request.headers.get('x-forwarded-host');
+    if (xForwardedHost) {
+        xForwardedHost.split(',').forEach(h => {
+            const norm = normalize(h);
+            if (norm) allowedHosts.add(norm);
+        });
+    }
+    const hostHeader = request.headers.get('host');
+    if (hostHeader) {
+        const norm = normalize(hostHeader);
+        if (norm) allowedHosts.add(norm);
+    }
+    if (process.env.APP_URL) {
+        try {
+            const appHost = normalize(new URL(process.env.APP_URL).hostname);
+            if (appHost) allowedHosts.add(appHost);
+        } catch {}
+    }
+    try {
+        const reqHost = normalize(new URL(request.url).hostname);
+        if (reqHost) allowedHosts.add(reqHost);
+    } catch {}
+    allowedHosts.add('localhost');
+    allowedHosts.add('127.0.0.1');
+    if (!allowedHosts.has(originHost))
+        throw new AppError('This request must come from this website.', 403);
 }
 export async function throttle(key: string, maximum = 10, seconds = 900) {
     const accepted = (await atomic(async () => {
