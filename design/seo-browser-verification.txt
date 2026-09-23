@@ -1,0 +1,21 @@
+/: one H1, local fonts, desktop/mobile layout OK
+/shop: one H1, local fonts, desktop/mobile layout OK
+/help: one H1, local fonts, desktop/mobile layout OK
+/login: one H1, local fonts, desktop/mobile layout OK
+Product: crawlable navigation, optimized image and purchase dialog deep-link OK
+/checkout: logged-out browser redirected to login
+/customer: logged-out browser redirected to login
+/dashboard: logged-out browser redirected to login
+/hotel: logged-out browser redirected to login
+Browser errors:
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)
+http://localhost:3002/_vercel/insights/script.js - Failed to load resource: the server responded with a status of 404 (Not Found)

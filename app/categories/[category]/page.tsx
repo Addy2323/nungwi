@@ -7,7 +7,8 @@ import JsonLd from '@/components/json-ld'
 import { breadcrumbs, categoryPath, pageMetadata, productPath } from '@/lib/seo'
 import { listingSchema, seoProducts } from '@/lib/server/seo'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
+export function generateStaticParams() { return [] }
 type Props = { params: Promise<{ category: string }> }
 async function getCategory(params: Props['params']) {
   const { category } = await params
@@ -17,7 +18,11 @@ async function getCategory(params: Props['params']) {
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await getCategory(params)
-  return pageMetadata(`${category} Delivery in Zanzibar | Nungwi Shop`, `Shop ${category.toLowerCase()} at Nungwi Shop by Vunjabei Liquor Zanzibar. Browse current prices and availability for delivery to hotels and villas in Nungwi and Kendwa.`.slice(0,160), categoryPath(category))
+  const title = category.length <= 11 ? `Shop ${category} & Drinks Delivery in Zanzibar | Nungwi Shop` : `${category} Delivery in Zanzibar | Nungwi Shop`
+  const suffix = category.length <= 11 ? ' at Nungwi Shop by Vunjabei Liquor Zanzibar. Browse current prices and availability for local delivery to hotels and villas in Nungwi and Kendwa.' : ' at Nungwi Shop in Zanzibar. Compare prices and stock, then order drinks delivery to your hotel or villa in Nungwi and Kendwa.'
+  const budget = 160 - 'Shop '.length - suffix.length
+  const name = category.length > budget ? category.slice(0, budget - 1).trimEnd() + '…' : category
+  return pageMetadata(title, `Shop ${name.toLowerCase()}${suffix}`, categoryPath(category))
 }
 export default async function CategoryPage({ params }: Props) {
   const { category, products } = await getCategory(params)

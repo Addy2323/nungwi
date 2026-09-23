@@ -7,7 +7,8 @@ import JsonLd from '@/components/json-ld'
 import { absoluteUrl, breadcrumbs, categoryPath, pageMetadata, productPath } from '@/lib/seo'
 import { productDescription, productSchema, seoProduct } from '@/lib/server/seo'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
+export function generateStaticParams() { return [] }
 type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await seoProduct((await params).id)

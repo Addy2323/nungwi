@@ -18,11 +18,16 @@ export const seoProducts = cache(async (): Promise<SeoProduct[]> => {
 })
 export const seoProduct = cache(async (id: string) => (await seoProducts()).find(p => p.id === id))
 export function productDescription(product: SeoProduct) {
-  const name = product.name.length > 65 ? product.name.slice(0, 62).trimEnd() + '…' : product.name
-  return `Buy ${name} from Nungwi Shop in Zanzibar. View prices, pack sizes and availability for delivery to your hotel or villa in Nungwi and Kendwa.`.slice(0, 160)
+  const suffix = ' from Nungwi Shop in Zanzibar. View prices and availability, then order delivery to your hotel or villa in Nungwi and Kendwa.'
+  const prefix = product.name.length + suffix.length + 4 < 150 ? 'Browse and buy ' : 'Buy '
+  const budget = 160 - prefix.length - suffix.length
+  const name = product.name.length > budget ? product.name.slice(0, budget - 1).trimEnd() + '…' : product.name
+  return prefix + name + suffix
 }
 export function productSchema(product: SeoProduct) {
-  const image = product.image && !product.image.startsWith('data:') ? absoluteUrl(product.image) : absoluteUrl('/images/mango-coast.png')
+  const source = product.image && !product.image.startsWith('data:') ? product.image : '/images/mango-coast.png'
+  // Raw uploads are excluded by robots; expose their public optimized image URL to crawlers.
+  const image = absoluteUrl(source.startsWith('/uploads/') ? `/_next/image?url=${encodeURIComponent(source)}&w=1200&q=75` : source)
   return {
     '@context': 'https://schema.org', '@type': 'Product', '@id': absoluteUrl(productPath(product.id)) + '#product',
     name: product.name, description: product.description || productDescription(product), image: [image], sku: product.sku,

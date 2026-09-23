@@ -1,5 +1,3 @@
-import LoadingScreen from '@/components/loading-screen'
-
 export default function Loading() {
-  return <LoadingScreen />
+  return <div role="status" aria-live="polite" className="route-loading">Loading Nungwi Shop…</div>
 }

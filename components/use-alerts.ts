@@ -1,12 +1,12 @@
 'use client'
 
-import Swal from 'sweetalert2/dist/sweetalert2.js'
 import type { SweetAlertOptions } from 'sweetalert2'
 import { useLanguage } from './language-provider'
 
 export function useAlerts() {
   const { t } = useLanguage()
   async function fire(options: SweetAlertOptions) {
+    const { default: Swal } = await import('sweetalert2/dist/sweetalert2.js')
     // Let React finish closing/opening a form before choosing the popup's parent.
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
     const palette = getComputedStyle(document.documentElement)
@@ -21,6 +21,14 @@ export function useAlerts() {
       customClass: { popup: 'nungwi-alert' },
       heightAuto: false,
       keydownListenerCapture: true,
+      didOpen: popup => {
+        if (options.toast) {
+          popup.addEventListener('mouseenter', Swal.stopTimer)
+          popup.addEventListener('mouseleave', Swal.resumeTimer)
+          popup.addEventListener('focusin', Swal.stopTimer)
+          popup.addEventListener('focusout', Swal.resumeTimer)
+        }
+      },
       ...options,
     })
   }
@@ -35,14 +43,6 @@ export function useAlerts() {
       showCloseButton: toast,
       timer: toast ? 4500 : undefined,
       timerProgressBar: toast,
-      didOpen: popup => {
-        if (toast) {
-          popup.addEventListener('mouseenter', Swal.stopTimer)
-          popup.addEventListener('mouseleave', Swal.resumeTimer)
-          popup.addEventListener('focusin', Swal.stopTimer)
-          popup.addEventListener('focusout', Swal.resumeTimer)
-        }
-      },
     }),
     error: (message: string) => fire({ icon: 'error', titleText: t('Unable to complete this action', 'Imeshindikana kukamilisha hatua hii'), text: t(message) }),
     confirm: async (message: string) => (await fire({

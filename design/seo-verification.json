@@ -1,0 +1,116 @@
+{
+  "robots": {
+    "status": 200,
+    "content_type": "text/plain",
+    "body": "User-Agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /customer\nDisallow: /hotel\nDisallow: /checkout\nDisallow: /api/\nDisallow: /auth\nDisallow: /login\nDisallow: /signup\nDisallow: /accept-invitation\nDisallow: /reset-password\nDisallow: /forgot-password\nDisallow: /delivery/\nDisallow: /uploads/\n\nSitemap: https://vunjabeiliquorzanzibar.co.tz/sitemap.xml\n"
+  },
+  "sitemap": {
+    "status": 200,
+    "content_type": "application/xml",
+    "urls": [
+      "https://vunjabeiliquorzanzibar.co.tz/",
+      "https://vunjabeiliquorzanzibar.co.tz/shop",
+      "https://vunjabeiliquorzanzibar.co.tz/help",
+      "https://vunjabeiliquorzanzibar.co.tz/products/8a27119e-90c1-4c57-ba4d-a0e00cd995dd",
+      "https://vunjabeiliquorzanzibar.co.tz/categories/Vodka"
+    ]
+  },
+  "pages": [
+    {
+      "path": "/",
+      "title": "Liquor Delivery Zanzibar & Nungwi | Vunjabei Liquor",
+      "title_length": 51,
+      "description_length": 154,
+      "h1": 1,
+      "canonical": "https://vunjabeiliquorzanzibar.co.tz",
+      "schemas": [
+        "Organization"
+      ]
+    },
+    {
+      "path": "/shop",
+      "title": "Shop Wine, Beer & Spirits in Zanzibar | Nungwi Shop",
+      "title_length": 51,
+      "description_length": 155,
+      "h1": 1,
+      "canonical": "https://vunjabeiliquorzanzibar.co.tz/shop",
+      "schemas": [
+        "Organization",
+        "ItemList",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/help",
+      "title": "Delivery, Returns & Shopping Help | Nungwi Zanzibar",
+      "title_length": 51,
+      "description_length": 153,
+      "h1": 1,
+      "canonical": "https://vunjabeiliquorzanzibar.co.tz/help",
+      "schemas": [
+        "Organization",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/products/8a27119e-90c1-4c57-ba4d-a0e00cd995dd",
+      "title": "K-Vant Premium Spirit 750ml | Nungwi Shop Zanzibar",
+      "title_length": 50,
+      "description_length": 156,
+      "h1": 1,
+      "canonical": "https://vunjabeiliquorzanzibar.co.tz/products/8a27119e-90c1-4c57-ba4d-a0e00cd995dd",
+      "schemas": [
+        "Organization",
+        "Product",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/categories/Vodka",
+      "title": "Shop Vodka & Drinks Delivery in Zanzibar | Nungwi Shop",
+      "title_length": 54,
+      "description_length": 155,
+      "h1": 1,
+      "canonical": "https://vunjabeiliquorzanzibar.co.tz/categories/Vodka",
+      "schemas": [
+        "Organization",
+        "BreadcrumbList",
+        "ItemList"
+      ]
+    }
+  ],
+  "auth": {
+    "/checkout": {
+      "status": 200,
+      "location": "/login?next=%2Fcheckout",
+      "x_robots_tag": "noindex, nofollow"
+    },
+    "/customer": {
+      "status": 200,
+      "location": "/login",
+      "x_robots_tag": "noindex, nofollow"
+    },
+    "/dashboard": {
+      "status": 200,
+      "location": "/login",
+      "x_robots_tag": "noindex, nofollow"
+    },
+    "/hotel": {
+      "status": 200,
+      "location": "/login",
+      "x_robots_tag": "noindex, nofollow"
+    }
+  },
+  "www_redirect": {
+    "status": 301,
+    "location": "https://vunjabeiliquorzanzibar.co.tz/shop?test=canonical"
+  },
+  "og": {
+    "status": 200,
+    "size": [
+      1200,
+      630
+    ],
+    "content_type": "image/png"
+  }
+}

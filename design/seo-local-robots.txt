@@ -1,0 +1,27 @@
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+x-nextjs-cache: HIT
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+Date: Tue, 22 Sep 2026 23:58:14 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+User-Agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /customer
+Disallow: /hotel
+Disallow: /checkout
+Disallow: /api/
+Disallow: /auth
+Disallow: /login
+Disallow: /signup
+Disallow: /accept-invitation
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /delivery/
+Disallow: /uploads/
+
+Sitemap: https://vunjabeiliquorzanzibar.co.tz/sitemap.xml
