@@ -1,0 +1,243 @@
+.installerContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: min(420px, calc(100vw - 32px));
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.banner {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 112, 21, 0.25);
+  border-radius: 20px;
+  padding: 16px 18px;
+  box-shadow: 0 20px 50px rgba(45, 20, 5, 0.18), 0 4px 12px rgba(255, 93, 12, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 93, 12, 0.15);
+  color: #ff5d0c;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.appIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 93, 12, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 20px;
+}
+
+.details strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.2px;
+}
+
+.details p {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.installBtn {
+  flex: 1;
+  background: linear-gradient(115deg, #ff6b14 0%, #ff4c00 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 76, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.installBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 76, 0, 0.45);
+}
+
+.installBtn:active {
+  transform: translateY(0);
+}
+
+.downloadBtn {
+  background: #fdf5ef;
+  color: #ff5d0c;
+  border: 1px solid rgba(255, 93, 12, 0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.downloadBtn:hover {
+  background: #ffebd8;
+}
+
+.iosModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 10, 5, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.iosModal {
+  background: white;
+  border-radius: 24px;
+  padding: 26px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.iosModal .appIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+}
+
+.iosModal h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+
+.iosSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  background: #fff8f2;
+  border: 1px solid #ffe3ce;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+}
+
+.iosStep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.iosStepBadge {
+  background: #ff5d0c;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.iosGotIt {
+  width: 100%;
+  background: #ff5d0c;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .installerContainer {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}

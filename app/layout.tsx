@@ -12,6 +12,7 @@ import 'sweetalert2/dist/sweetalert2.min.css'
 import './sweet-alert.css'
 import { LanguageProvider } from '@/components/language-provider'
 import SiteMotion from '@/components/site-motion'
+import InstallPrompt from '@/components/install-prompt'
 
 const roboto = Roboto({ subsets: ['latin'], display: 'swap', variable: '--font-roboto' })
 const caslon = Libre_Caslon_Text({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'], display: 'swap', variable: '--font-caslon' })
@@ -23,14 +24,17 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Nungwi Shop' },
   icons: {
-    icon: [{ url: '/logo.png', type: 'image/png', sizes: '1254x1254' }],
-    apple: [{ url: '/logo.png', sizes: '1254x1254', type: 'image/png' }],
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#faf7f2',
+  themeColor: '#ff5d0c',
 }
 
 export default function RootLayout({
@@ -43,7 +47,7 @@ export default function RootLayout({
     <html lang="en" className={`${roboto.variable} ${caslon.variable}`} suppressHydrationWarning>
       <body className="antialiased">
         <JsonLd data={businessSchema()}/>
-        <LanguageProvider><SiteMotion />{children}</LanguageProvider>
+        <LanguageProvider><SiteMotion /><InstallPrompt />{children}</LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
