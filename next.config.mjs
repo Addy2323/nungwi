@@ -6,7 +6,7 @@ const nextConfig = {
     '/*': ['./backups/**/*', './data/**/*', './.env*'],
   },
   images: {
-    localPatterns: [{ pathname: '/images/**' }, { pathname: '/uploads/**' }, { pathname: '/placeholder.svg' }],
+    localPatterns: [{ pathname: '/images/**' }, { pathname: '/uploads/**' }, { pathname: '/logo.png' }, { pathname: '/logo%20bg%20%20remover.png' }],
     remotePatterns: ['vunjabeiliquorzanzibar.co.tz', ...(process.env.NEXT_PUBLIC_IMAGE_HOSTS || '').split(',').map(value => value.trim()).filter(Boolean)].map(hostname => ({ protocol: 'https', hostname })),
   },
   async headers() {

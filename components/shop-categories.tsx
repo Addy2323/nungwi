@@ -31,7 +31,7 @@ export default function ShopCategories({ products, selected, onSelect, loading }
       {categories.map(category => {
         const items = products.filter(product => product.category === category)
         return <button key={category} className="shop-category-tile" aria-pressed={selected === category} onClick={() => onSelect(category)} aria-controls="shop">
-          <span className="category-art"><SiteImage src={items[0].image || '/placeholder.svg'} alt={`${category}: ${items[0].name}`} width={52} height={56} sizes="52px" loading="lazy" /></span>
+          <span className="category-art"><SiteImage src={items[0].image || '/logo.png'} alt={`${category}: ${items[0].name}`} width={52} height={56} sizes="52px" loading="lazy" /></span>
           <span className="category-copy"><strong>{t(category)}</strong><small>{items.length} {label(items.length)}</small></span>
           <ArrowUpRight size={18} aria-hidden="true" />
         </button>

@@ -152,7 +152,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 18000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'The premier spirit of Tanzania, smooth citrus and herbal notes.',
     barcode: '6001007000400'
   },
@@ -174,7 +174,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 17000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Smooth triple-distilled Tanzanian spirit.',
     barcode: '6001007000420'
   },
@@ -196,7 +196,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 3000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Iconic Tanzanian full-bodied lager by TBL.',
     barcode: '6001007000100'
   },
@@ -218,7 +218,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 3000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Crisp and refreshing Tanzanian lager brewed with water from Mt. Kilimanjaro.',
     barcode: '6001007000200'
   },
@@ -240,7 +240,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 3000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: '100% malt premium lager by SBL.',
     barcode: '6001007000300'
   },
@@ -261,7 +261,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 2500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Popular Lake Zone lager in Tanzania.',
     barcode: '6001007000350'
   },
@@ -282,7 +282,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 3500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Premium craft malt lager.',
     barcode: '6001007000360'
   },
@@ -303,7 +303,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 4500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'World famous Dutch lager.',
     barcode: '8712000000010'
   },
@@ -324,7 +324,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 4000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Rich dark stout with roasted malt bitterness.',
     barcode: '6001007000370'
   },
@@ -346,7 +346,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 45000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Vibrant blended Scotch whisky.',
     barcode: '5000267024105'
   },
@@ -367,7 +367,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 55000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Triple distilled smooth Irish whiskey.',
     barcode: '5011013100156'
   },
@@ -389,7 +389,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 65000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Charcoal mellowed Tennessee whiskey.',
     barcode: '082184090466'
   },
@@ -410,7 +410,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 38000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Classic juniper-forward London dry gin.',
     barcode: '5000267011105'
   },
@@ -432,7 +432,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 135000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Bold and aromatic French cognac.',
     barcode: '3245900001018'
   },
@@ -454,7 +454,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 42000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Velvety cream liqueur crafted from wild Marula fruit.',
     barcode: '6001495000014'
   },
@@ -476,7 +476,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 22000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Authentic Tanzanian dry red wine produced in Dodoma region.',
     barcode: '6001007000700'
   },
@@ -498,7 +498,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 25000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Easy-drinking fruity sweet red wine.',
     barcode: '6001495060018'
   },
@@ -520,7 +520,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 4500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Crisp dry South African apple cider.',
     barcode: '6001495005019'
   },
@@ -543,7 +543,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'can',
     unit_size: 1,
     price: 3500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Premixed vodka cooler with lemon & guarana.',
     barcode: '6001007000380'
   },
@@ -568,7 +568,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 1500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Classic sparkling cola drink.',
     barcode: '5449000000996'
   },
@@ -590,7 +590,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 1500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Fruity sparkling orange soda.',
     barcode: '5449000000997'
   },
@@ -612,7 +612,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 1500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Spicy and fiery Tanzanian ginger beer.',
     barcode: '5449000000998'
   },
@@ -633,7 +633,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'can',
     unit_size: 1,
     price: 4500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Vitalizes body and mind.',
     barcode: '90162602'
   },
@@ -655,7 +655,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'carton',
     unit_size: 1,
     price: 3000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Rich Tanzanian mango fruit nectar.',
     barcode: '6001007000800'
   },
@@ -677,7 +677,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 2000,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Tangy spiced traditional Tanzanian tamarind juice.',
     barcode: '6001007000900'
   },
@@ -698,7 +698,7 @@ export const TANZANIA_DRINK_PRESETS: DrinkPreset[] = [
     unit: 'bottle',
     unit_size: 1,
     price: 1500,
-    image: '/images/mango-coast.png',
+    image: '/logo.png',
     description: 'Pure purified drinking water from Mt. Kilimanjaro source.',
     barcode: '6001007000600'
   }

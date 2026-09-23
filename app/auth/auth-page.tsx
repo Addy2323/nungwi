@@ -1,4 +1,5 @@
 'use client'
+import BrandLogo from '@/components/brand-logo'
 import SiteImage from '@/components/site-image'
 
 import { useAlerts } from '@/components/use-alerts'
@@ -49,7 +50,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
   }
 
   return <div className={styles.page}>
-    <header className={styles.header}><Link className={styles.brand} href="/shop"><span><Palmtree size={30}/></span>NUNGWI <b>SHOP</b></Link><Link className={styles.backLink} href="/shop"><ArrowLeft size={16}/><span>{t("Back to shop")}</span></Link><LanguageSelect/></header>
+    <header className={styles.header}><Link className={styles.brand} href="/shop"><BrandLogo/></Link><Link className={styles.backLink} href="/shop"><ArrowLeft size={16}/><span>{t("Back to shop")}</span></Link><LanguageSelect/></header>
     <main className={styles.main}>
       <section className={styles.story} aria-label={t("Nungwi beach delivery")}><SiteImage fill sizes="(max-width: 760px) 90vw, 45vw" preload className={styles.heroImage} src="/images/island-vibes-hero-v2.png" alt={t("Chilled island drinks on a Zanzibar beach at sunset")}/><div className={styles.storyShade}/><div className={styles.storyTop}><span><MapPin size={15}/> NUNGWI, ZANZIBAR</span><Palmtree size={35}/></div><div className={styles.storyCopy}><span>{t("MORE SUNSHINE. LESS HASSLE.")}</span><p className={styles.storyTitle}>{t("Your beach day,")}<br/>{t("a little ")}<em>{t("better.")}</em></p><p>{t("Cold drinks, island favourites, and everything")}<br className={styles.desktopBreak}/>{t(" you need. Delivered to your happy place.")}</p><div className={styles.storyBenefits}><span><Truck size={19}/>{t(" Fast island delivery")}</span><span><Heart size={18}/>{t(" Your favourites, on repeat")}</span></div></div><div className={styles.storyBottom}><div className={styles.deliveryBadge}><span><ShoppingBag size={21}/></span><div><strong>{t("Stay right where you are.")}</strong><small>{t("We’ll bring the good times to you.")}</small></div></div><span className={styles.script}>{t("Same Beach")}<br/><i>{t("More Good Times")}</i></span></div></section>
       <section className={styles.formSide} aria-labelledby="auth-title">

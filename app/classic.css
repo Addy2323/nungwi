@@ -80,3 +80,8 @@ input,select,textarea,button{font:inherit}select,input,textarea{color:inherit}se
 @media(max-width:760px){.catalogue-page{padding:24px 18px 45px}.product-page-grid{grid-template-columns:1fr;gap:24px}.catalogue-page .product-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-page .card-details{padding:12px}.catalogue-page .card-details h2{font-size:16px}}
 
 .route-loading{padding:32px;text-align:center;color:var(--text-muted);font-size:14px}
+
+/* Supplied brand artwork: keep its full proportions in every header. */
+.site-brand-image{display:block;width:76px;height:76px;object-fit:contain;flex-shrink:0}
+.shop-footer .site-brand-image{width:140px;height:140px}
+@media(max-width:760px){.site-brand-image{width:62px;height:62px}}

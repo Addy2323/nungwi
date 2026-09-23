@@ -25,7 +25,7 @@ export function productDescription(product: SeoProduct) {
   return prefix + name + suffix
 }
 export function productSchema(product: SeoProduct) {
-  const source = product.image && !product.image.startsWith('data:') ? product.image : '/images/mango-coast.png'
+  const source = product.image && !product.image.startsWith('data:') ? product.image : '/logo.png'
   // Raw uploads are excluded by robots; expose their public optimized image URL to crawlers.
   const image = absoluteUrl(source.startsWith('/uploads/') ? `/_next/image?url=${encodeURIComponent(source)}&w=1200&q=75` : source)
   return {
@@ -49,7 +49,7 @@ export function businessSchema() {
   return {
     '@context': 'https://schema.org', '@type': street ? 'LiquorStore' : 'Organization', '@id': absoluteUrl('/#business'),
     name: BUSINESS_NAME, alternateName: SHOP_NAME, url: SITE_URL_VALUE,
-    logo: absoluteUrl('/icon.svg'), areaServed: ['Nungwi', 'Kendwa'].map(name => ({ '@type': 'Place', name: `${name}, Zanzibar, Tanzania` })),
+    logo: absoluteUrl('/logo.png'), areaServed: ['Nungwi', 'Kendwa'].map(name => ({ '@type': 'Place', name: `${name}, Zanzibar, Tanzania` })),
     ...(info.phone ? { telephone: info.phone } : {}), ...(info.email ? { email: info.email } : {}),
     ...(street ? { address: { '@type': 'PostalAddress', streetAddress: street, addressLocality: process.env.SHOP_LOCALITY || 'Nungwi', addressRegion: 'Zanzibar', addressCountry: 'TZ' } } : {}),
     ...(street && process.env.SHOP_LATITUDE && process.env.SHOP_LONGITUDE && Number.isFinite(lat) && Math.abs(lat)<=90 && Number.isFinite(lng) && Math.abs(lng)<=180 ? { geo: { '@type': 'GeoCoordinates', latitude: lat, longitude: lng } } : {}),

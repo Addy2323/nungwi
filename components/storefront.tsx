@@ -1,4 +1,5 @@
 'use client'
+import BrandLogo from '@/components/brand-logo'
 import SiteImage from '@/components/site-image'
 
 import { useAlerts } from '@/components/use-alerts'
@@ -67,7 +68,7 @@ export default function Storefront({ shopPage = false, initialCatalogue }: { sho
     <a className="skip-link" href="#shop">{t('Skip to products', 'Nenda kwenye bidhaa')}</a>
     <div className="announcement">Nungwi & Kendwa <span>·</span> {t('Island essentials, delivered to your door.', 'Mahitaji ya kisiwani, mlangoni pako.')}</div>
     <header className="header-bar">
-      <Link href="/" className="brand-logo"><span className="brand-icon"><Palmtree size={26}/></span><span>NUNGWI <b>SHOP</b></span></Link>
+      <Link href="/" className="brand-logo"><BrandLogo/></Link>
       <nav className="desktop-navigation" aria-label={t('Shop navigation', 'Menyu ya duka')}><Link href="/shop" aria-current={shopPage ? 'page' : undefined}>{t('Shop')}</Link><a href="#delivery-checker">{t('Delivery')}</a><Link href="/help#faq">{t('Help', 'Msaada')}</Link></nav>
       <div className="header-actions"><LanguageSelect/><Link href="/dashboard" className="account-link" aria-label={t('My account')}><UserRound size={21}/><span>{t('My account')}</span></Link><button className="cart-btn-orange" onClick={() => setCartOpen(true)} aria-label={`${t('Basket', 'Kikapu')} (${count})`}><ShoppingCart size={20}/><span key={count}>{count}</span></button></div>
     </header>

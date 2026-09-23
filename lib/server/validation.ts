@@ -25,7 +25,7 @@ export const productInput = z.object({
   brand: z.string().max(100).default(''),
   category: text,
   description: z.string().max(3000).default(''),
-  image: image.default('/images/mango-coast.png'),
+  image: image.default('/logo.png'),
   volume: z.string().max(50).default(''),
   unit: z.enum(['bottle','can','pack','carton','crate']).default('bottle'),
   unit_size: z.preprocess((val) => (val === null || val === '' || val === undefined ? 1 : Number(val)), quantity.default(1)),

@@ -100,7 +100,7 @@ export function ScanModal({
             {scanResult?.found ? (
               <div className={styles.productBody}>
                 <SiteImage
-                  src={scanResult.product?.image || '/images/mango-coast.png'}
+                  src={scanResult.product?.image || '/logo.png'}
                   alt={scanResult.product?.name || "Scanned beverage"}
                   className={styles.productThumb}
                 />
