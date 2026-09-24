@@ -233,7 +233,7 @@ export async function assignDriver(actor: Actor, orderId: string, input: {
         if (!input.eta.trim())
             throw new AppError('Enter an estimated arrival time or delivery window.');
         driver.phone = phone.parse(driver.phone);
-        if (!await setting('sms_shop_location',process.env.SHOP_LOCATION||'')) throw new AppError('Configure the shop pickup location in SMS settings before assigning a driver.');
+        if (!await setting('sms_shop_location',process.env.SHOP_LOCATION||'Nungwi Main Shop, Zanzibar')) throw new AppError('Configure the shop pickup location in SMS settings before assigning a driver.');
         const assignment = JSON.stringify({ ...driver, eta: input.eta, instructions: input.instructions });
         if (order.driver === assignment)
             return (await orderDetails(actor, orderId));

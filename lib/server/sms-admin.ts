@@ -9,7 +9,7 @@ const config=z.object({sms_provider:z.enum(['macksms','twilio']),sms_sender_id:z
 export async function smsSettings(actor:Actor) {
  permit(actor,['admin'])
  const stored=Object.fromEntries((await all("SELECT * FROM settings WHERE key LIKE 'sms_%'")).map(r=>[r.key,r.value]))
- return {values:{sms_provider:process.env.SMS_PROVIDER||'twilio',sms_sender_id:process.env.SMS_SENDER_ID||'',sms_admin_phone:'',sms_shop_location:process.env.SHOP_LOCATION||'',sms_enabled:'true',sms_otp_enabled:'true',sms_order_enabled:'true',sms_driver_enabled:'true',sms_customer_enabled:'true',sms_admin_enabled:'true',...stored},templates:Object.fromEntries(Object.entries(smsTemplates).map(([key,value])=>[key,stored[`sms_template_${key}`]||value])),variables:templateVariables,recipients:await all('SELECT id,name,phone FROM users WHERE active=1 AND notifications=1 ORDER BY name LIMIT 5000')}
+ return {values:{sms_provider:process.env.SMS_PROVIDER||'twilio',sms_sender_id:process.env.SMS_SENDER_ID||'',sms_admin_phone:'',sms_shop_location:process.env.SHOP_LOCATION||'Nungwi Main Shop, Zanzibar',sms_enabled:'true',sms_otp_enabled:'true',sms_order_enabled:'true',sms_driver_enabled:'true',sms_customer_enabled:'true',sms_admin_enabled:'true',...stored},templates:Object.fromEntries(Object.entries(smsTemplates).map(([key,value])=>[key,stored[`sms_template_${key}`]||value])),variables:templateVariables,recipients:await all('SELECT id,name,phone FROM users WHERE active=1 AND notifications=1 ORDER BY name LIMIT 5000')}
 }
 export async function saveSmsSettings(actor:Actor,raw:unknown) {
  permit(actor,['admin']);const value=config.parse(raw)
