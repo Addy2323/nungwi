@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { api, mutate } from '@/lib/client-api'
+import { useEffect, useId, useRef, useState, type FormEvent, type ChangeEvent } from 'react'
+import { api, mutate, uploadImage } from '@/lib/client-api'
 import { PRODUCT_UNITS, type CatalogProduct } from '@/lib/product-workflow'
 import { UniversalScanner } from './scanner/universal-scanner'
 import { useLanguage } from './language-provider'
@@ -8,10 +8,11 @@ import w from './product-workflow.module.css'
 import s from './platform.module.css'
 
 export default function ProductForm({initial={},onSaved,onCancel,onUseExisting}:{initial?:Record<string,any>;onSaved:(p:CatalogProduct)=>void;onCancel:()=>void;onUseExisting?:(p:CatalogProduct)=>void}) {
-  const {t}=useLanguage();const key=useId();const submitting=useRef(false)
+  const {t}=useLanguage();const key=useId();const submitting=useRef(false);const fileInputRef=useRef<HTMLInputElement>(null)
   const [values,setValues]=useState<Record<string,any>>({name:'',category:'',brand:'',barcode:'',sku:'',unit:'bottle',unit_size:1,cost:0,price:0,reorder_level:1,min_qty:1,deposit:0,hotel_price:null,image:'/logo.png',...initial,active:initial.active===undefined?true:!!initial.active,track_expiry:initial.track_expiry===undefined?true:!!initial.track_expiry})
   const [options,setOptions]=useState<any>({categories:[],brands:[]});const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [errors,setErrors]=useState<Record<string,string>>({})
   const [similar,setSimilar]=useState<CatalogProduct[]>([]);const [allowSimilar,setAllowSimilar]=useState(false);const [deposit,setDeposit]=useState(!!initial.deposit);const [scan,setScan]=useState(false)
+  const [uploading,setUploading]=useState(false);const [uploadError,setUploadError]=useState('')
   useEffect(()=>{api('catalogue-options').then(setOptions).catch(e=>setError(e.message))},[])
   useEffect(()=>{
     if(initial.id||(!values.name&&!values.barcode))return
@@ -20,6 +21,20 @@ export default function ProductForm({initial={},onSaved,onCancel,onUseExisting}:
     return()=>{cancelled=true;clearTimeout(timer)}
   },[values.name,values.barcode,initial.id])
   function change(name:string,value:any){setValues(v=>({...v,[name]:value}));setErrors(e=>({...e,[name]:''}))}
+  async function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true); setUploadError('')
+    try {
+      const url = await uploadImage(file)
+      change('image', url)
+    } catch (err) {
+      setUploadError((err as Error).message)
+    } finally {
+      setUploading(false)
+      if (e.target) e.target.value = ''
+    }
+  }
   function field(name:string,label:string,type='text',required=false){return <label key={name} htmlFor={`${key}-${name}`}>{t(label)}{required?' *':''}<input id={`${key}-${name}`} name={name} type={type} required={required} value={values[name]??''} min={type==='number'?0:undefined} step={type==='number'?1:undefined} inputMode={type==='number'?'numeric':undefined} aria-invalid={!!errors[name]} aria-describedby={errors[name]?`${key}-${name}-error`:undefined} onChange={e=>change(name,type==='number'?(e.target.value===''?null:Number(e.target.value)):e.target.value)}/>{errors[name]&&<span className={w.error} id={`${key}-${name}-error`}>{t(errors[name])}</span>}</label>}
   async function save(event:FormEvent){
     event.preventDefault();if(submitting.current)return
@@ -32,10 +47,49 @@ export default function ProductForm({initial={},onSaved,onCancel,onUseExisting}:
     finally{submitting.current=false;setBusy(false)}
   }
   return <form className={w.stack} onSubmit={save}>
-    <fieldset disabled={busy} style={{border:0,padding:0,margin:0,minWidth:0}} className={w.stack}>
+    <fieldset disabled={busy||uploading} style={{border:0,padding:0,margin:0,minWidth:0}} className={w.stack}>
     {!initial.id&&<label>{t('Form template')}<select defaultValue="beverage" onChange={e=>{if(e.target.value==='general')change('unit','piece');else if(e.target.value==='beverage')change('unit','bottle')}}><option value="beverage">{t('Beverage')}</option><option value="grocery">{t('Grocery')}</option><option value="general">{t('General retail')}</option></select></label>}
     {field('name','Product name','text',true)}
     {similar.length>0&&!initial.id&&!allowSimilar&&<div className={w.note}><strong>{t('Possible existing products')}</strong>{similar.map(p=><div key={p.id}><p>{p.name} · {p.barcode||p.sku}{!p.active?` · ${t('Archived')}`:''}</p>{onUseExisting&&!!p.active&&<button type="button" className={s.secondary} onClick={()=>onUseExisting(p)}>{t('Use existing product')}</button>}</div>)}<button type="button" className={s.secondary} onClick={()=>setAllowSimilar(true)}>{t('Create anyway')}</button><small>{t('A barcode already in use cannot be assigned again.')}</small></div>}
+    
+    <div className={w.stack} style={{background:'var(--background-alt,#f8f9fa)',padding:'12px',borderRadius:'10px',border:'1px solid var(--border,#ddd)'}}>
+      <label>{t('Product photo')}</label>
+      <div style={{display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap'}}>
+        <img
+          src={values.image||'/logo.png'}
+          alt={values.name||'Product'}
+          style={{width:'64px',height:'64px',objectFit:'cover',borderRadius:'8px',border:'1px solid var(--border,#ccc)',background:'#fff'}}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          capture="environment"
+          style={{display:'none'}}
+          onChange={handleFileSelect}
+        />
+        <button
+          type="button"
+          className={s.secondary}
+          disabled={uploading||busy}
+          onClick={()=>fileInputRef.current?.click()}
+        >
+          {t(uploading?'Uploading image…':'📷 Take photo / Upload image')}
+        </button>
+        {values.image&&values.image!=='/logo.png'&&(
+          <button
+            type="button"
+            className={s.secondary}
+            disabled={uploading||busy}
+            onClick={()=>change('image','/logo.png')}
+          >
+            {t('Remove photo')}
+          </button>
+        )}
+      </div>
+      {uploadError&&<span className={w.error}>{uploadError}</span>}
+    </div>
+
     <div className={w.grid}><label>{t('Category')} *<input required list={`${key}-categories`} value={values.category} onChange={e=>change('category',e.target.value)} placeholder={t('Choose or enter a new category')}/><datalist id={`${key}-categories`}>{options.categories.filter((c:any)=>c.active).map((c:any)=><option key={c.id} value={c.name}/>)}</datalist></label>
     <label>{t('Brand')}<input list={`${key}-brands`} value={values.brand} onChange={e=>change('brand',e.target.value)}/><datalist id={`${key}-brands`}>{options.brands.map((b:any)=><option key={b.brand} value={b.brand}/>)}</datalist></label></div>
     {field('barcode','Barcode (optional)')}
@@ -58,6 +112,6 @@ export default function ProductForm({initial={},onSaved,onCancel,onUseExisting}:
     </div></details>
     </fieldset>
     {error&&<p role="alert" className={s.error}>{t(error)}</p>}
-    <div className={w.actions}><button type="button" className={s.secondary} disabled={busy} onClick={onCancel}>{t('Cancel')}</button><button className={s.primary} disabled={busy||(!initial.id&&similar.length>0&&!allowSimilar)}>{t(busy?'Saving…':'Save product')}</button></div>
+    <div className={w.actions}><button type="button" className={s.secondary} disabled={busy||uploading} onClick={onCancel}>{t('Cancel')}</button><button className={s.primary} disabled={busy||uploading||(!initial.id&&similar.length>0&&!allowSimilar)}>{t(busy?'Saving…':'Save product')}</button></div>
   </form>
 }

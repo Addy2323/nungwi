@@ -22,3 +22,13 @@ export async function mutate<T=any>(action:string,values:Record<string,unknown>=
     clearTimeout(timer)
   }
 }
+export async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await fetch('/api/platform', { method: 'POST', body: formData })
+  const result = await response.json().catch(() => {
+    throw new Error(`The server returned an unreadable response (HTTP ${response.status}).`)
+  })
+  if (!response.ok) throw new Error(result.error || 'Failed to upload image.')
+  return result.data.url
+}
