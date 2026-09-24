@@ -20,7 +20,14 @@ export function filterProducts(products: ShopProduct[], filters: { query: string
 export const deliveryAreas = ['Nungwi', 'Kendwa'] as const
 export function checkDeliveryArea(area: string) { return deliveryAreas.some(value => value.toLowerCase() === area.trim().toLowerCase()) }
 
-export const deliverySteps = ['Pending', 'Confirmed', 'Preparing', 'Driver assigned', 'Ready for pickup', 'Picked up', 'Out for delivery', 'Driver arriving', 'Delivered']
+export const deliverySteps = ['Confirmed', 'Preparing', 'Out for delivery', 'Delivered']
 export function orderProgress(status: string) {
-  return { index: deliverySteps.indexOf(status), exception: ['Cancelled', 'Returned', 'Failed delivery'].includes(status) }
+  let index = deliverySteps.indexOf(status)
+  if (index === -1) {
+    if (['Pending', 'Confirmed'].includes(status)) index = 0
+    else if (['Preparing', 'Driver assigned', 'Ready for pickup'].includes(status)) index = 1
+    else if (['Picked up', 'Out for delivery', 'Driver arriving'].includes(status)) index = 2
+    else if (status === 'Delivered') index = 3
+  }
+  return { index, exception: ['Cancelled', 'Returned', 'Failed delivery'].includes(status) }
 }
