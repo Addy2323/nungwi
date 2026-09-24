@@ -14,7 +14,12 @@
 .option small { display:block; opacity:.75; overflow-wrap:anywhere; }
 .note { padding:12px; border:1px solid var(--border,#ddd); border-radius:10px; font-size:14px; overflow-wrap:anywhere; }
 .error { color:#a52232; font-size:13px; }
-.toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-.toolbar input { flex:1; min-width:160px; }
-.toolbar select { width:auto; flex:1; }
-@media(max-width:540px) { .grid { grid-template-columns:1fr; } .actions button { flex:1; } }
+.toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; width:100%; min-width:0; box-sizing:border-box; }
+.toolbar input { flex:1; min-width:140px; max-width:100%; box-sizing:border-box; }
+.toolbar select { flex:1; min-width:120px; max-width:100%; box-sizing:border-box; }
+@media(max-width:760px) {
+  .grid { grid-template-columns:1fr; }
+  .actions button { flex:1; }
+  .toolbar { display:flex; flex-direction:column; align-items:stretch; width:100%; gap:8px; }
+  .toolbar input, .toolbar select, .toolbar button { width:100%!important; min-width:0!important; flex:none; box-sizing:border-box; }
+}
