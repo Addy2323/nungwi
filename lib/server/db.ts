@@ -7,7 +7,13 @@ export const id = () => randomUUID()
 export const now = () => new Date().toISOString()
 // PostgreSQL returns int8 aggregates as strings. Reject values JS cannot represent exactly.
 types.setTypeParser(20, value => { const number = Number(value); if (!Number.isSafeInteger(number)) throw new Error('Database integer exceeds the safe range'); return number })
-types.setTypeParser(1700, value => { const number = Number(value); if (!Number.isSafeInteger(number)) throw new Error('Database money aggregate exceeds the safe range'); return number })
+// NUMERIC also includes decimal product properties, such as alcohol_percentage.
+// BIGINT money sums still need to stay within JavaScript's safe integer range.
+types.setTypeParser(1700, value => {
+  const number = Number(value)
+  if (!Number.isFinite(number) || Math.abs(number) > Number.MAX_SAFE_INTEGER) throw new Error('Database numeric value exceeds the safe range')
+  return number
+})
 const state = globalThis as unknown as { nungwiPool?: Pool; nungwiTransaction?: AsyncLocalStorage<PoolClient> }
 const transaction = state.nungwiTransaction ??= new AsyncLocalStorage<PoolClient>()
 export function db() {
