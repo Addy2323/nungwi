@@ -24,7 +24,9 @@ function failure(error: unknown) {
         return NextResponse.json({ error: error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ') }, { status: 400 });
     if (error instanceof Error && 'code' in error && error.code === '23505')
         return NextResponse.json({ error: 'A record with this email, code, SKU or reference already exists.' }, { status: 409 });
-    console.error('[platform] Request failed');
+    // Log diagnostic codes without query text, submitted data, or connection secrets.
+    const code = error instanceof Error && 'code' in error ? String(error.code) : '';
+    console.error('[platform] Request failed', { code: /^[A-Z0-9_]{2,40}$/.test(code) ? code : 'UNKNOWN' });
     return NextResponse.json({ error: 'Unable to complete this request. Please try again.' }, { status: 500 });
 }
 export async function GET(request: Request) {

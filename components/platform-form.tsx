@@ -113,7 +113,8 @@ export default function PlatformForm({
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to save.'
       setError(message)
-      await alerts.error(message)
+      // The inline error remains available even if the popup cannot load or close.
+      void alerts.error(message).catch(() => {})
     } finally {
       setBusy(false)
     }
