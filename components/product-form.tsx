@@ -27,7 +27,7 @@ export default function ProductForm({initial={},onSaved,onCancel,onUseExisting}:
     try {
       const payload={...values,deposit:deposit?values.deposit:0}
       const id=await mutate<string>('product.save',payload)
-      onSaved({...values,...payload,id} as CatalogProduct)
+      onSaved({...values,...payload,id} as unknown as CatalogProduct)
     }catch(e){const message=(e as Error).message;setError(message);const next:Record<string,string>={};for(const part of message.split('; ')){const at=part.indexOf(':');if(at>0)next[part.slice(0,at)]=part.slice(at+1).trim()}setErrors(next)}
     finally{submitting.current=false;setBusy(false)}
   }

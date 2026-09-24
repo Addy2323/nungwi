@@ -23,7 +23,7 @@ export async function searchProducts(actor: Actor, params: Record<string, string
     FROM products p LEFT JOIN (SELECT product_id,SUM(CASE WHEN expires_at>? THEN remaining-reserved ELSE 0 END) AS available,SUM(reserved) AS reserved FROM batches GROUP BY product_id) s ON s.product_id=p.id
     WHERE ${clauses.join(' AND ')}
     ORDER BY ${input.q || input.id ? '' : "(SELECT MAX(created_at) FROM stock_movements m WHERE m.product_id=p.id AND m.kind='received') DESC NULLS LAST,"} lower(p.name),p.id LIMIT ? OFFSET ?`, ...args, input.limit + 1, (input.page - 1) * input.limit)
-  return { items: rows.slice(0,input.limit).map(p => ({ ...p, units: JSON.parse(p.units) })), hasMore: rows.length > input.limit, page: input.page }
+  return { items: rows.slice(0,input.limit).map(p => ({ ...p, units: JSON.parse(p.units) } as Record<string, any>)), hasMore: rows.length > input.limit, page: input.page }
 }
 
 export async function catalogueOptions(actor: Actor) {
