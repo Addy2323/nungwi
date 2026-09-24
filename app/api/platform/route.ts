@@ -109,9 +109,9 @@ export async function POST(request: Request) {
             if (!extension)
                 throw new AppError('Unsupported image format. SVG and executable uploads are not accepted.');
             const name = `${randomUUID()}.${extension}`;
-            const folder = path.resolve(process.env.UPLOAD_DIR || 'data/uploads');
+            const folder = path.resolve(/*turbopackIgnore: true*/ process.env.UPLOAD_DIR || path.join(process.cwd(), 'data/uploads'));
             await mkdir(folder, { recursive: true });
-            await writeFile(path.join(folder, name), buffer, { flag: 'wx' });
+            await writeFile(path.join(/*turbopackIgnore: true*/ folder, name), buffer, { flag: 'wx' });
             (await audit(actor.id, 'image.upload', 'image', name, { size: buffer.length }));
             return NextResponse.json({ data: { url: `/uploads/${name}` } });
         }
