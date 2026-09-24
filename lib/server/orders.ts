@@ -145,7 +145,7 @@ export async function orderDetails(actor: Actor, orderId: string): Promise<Row &
             return safe;
         } return item; }), history: (await all('SELECT h.*,u.name AS actor FROM order_history h LEFT JOIN users u ON u.id=h.actor_id WHERE order_id=? ORDER BY created_at', orderId)), payments: (await all('SELECT * FROM payments WHERE order_id=? ORDER BY created_at', orderId)) };
 }
-export async function listOrders(actor: Actor, from = '0000', to = '9999') {
+export async function listOrders(actor: Actor, from = '0000', to = '9999'): Promise<Row[]> {
     let clause = '';
     const args: any[] = [from, to];
     if (!staff(actor)) {
@@ -158,7 +158,62 @@ export async function listOrders(actor: Actor, from = '0000', to = '9999') {
             args.push(actor.id);
         }
     }
-    return (await Promise.all((await all(`SELECT id FROM orders WHERE created_at>=? AND created_at<?${clause} ORDER BY created_at DESC`, ...args)).map(async (order) => (await orderDetails(actor, order.id)))));
+    const orders = await all(`SELECT * FROM orders WHERE created_at>=? AND created_at<?${clause} ORDER BY created_at DESC`, ...args);
+    if (orders.length === 0) return [];
+    
+    const orderIds = orders.map(o => o.id);
+    const placeholders = orderIds.map(() => '?').join(',');
+    
+    const [allItems, allHistory, allPayments] = await Promise.all([
+        all(`SELECT * FROM order_items WHERE order_id IN (${placeholders})`, ...orderIds),
+        all(`SELECT h.*, u.name AS actor FROM order_history h LEFT JOIN users u ON u.id=h.actor_id WHERE h.order_id IN (${placeholders}) ORDER BY h.created_at`, ...orderIds),
+        all(`SELECT * FROM payments WHERE order_id IN (${placeholders}) ORDER BY created_at`, ...orderIds)
+    ]);
+    
+    const itemsByOrder = new Map<string, Row[]>();
+    for (const item of allItems) {
+        let list = itemsByOrder.get(item.order_id);
+        if (!list) { list = []; itemsByOrder.set(item.order_id, list); }
+        if (!staff(actor)) { const { cost, ...safe } = item; list.push(safe); }
+        else { list.push(item); }
+    }
+    
+    const historyByOrder = new Map<string, Row[]>();
+    for (const h of allHistory) {
+        let list = historyByOrder.get(h.order_id);
+        if (!list) { list = []; historyByOrder.set(h.order_id, list); }
+        list.push(h);
+    }
+    
+    const paymentsByOrder = new Map<string, Row[]>();
+    for (const p of allPayments) {
+        let list = paymentsByOrder.get(p.order_id);
+        if (!list) { list = []; paymentsByOrder.set(p.order_id, list); }
+        list.push(p);
+    }
+    
+    const isStaffActor = staff(actor);
+    return orders.map((order): Row => {
+        const { code_hash, driver_token, customer_code, ...safe } = order;
+        const payments = paymentsByOrder.get(order.id) || [];
+        const paid = payments.reduce((s, p) => s + (p.kind === 'payment' ? p.amount : -p.amount), 0);
+        const refunded = payments.reduce((s, p) => s + (p.kind === 'refund' ? p.amount : 0), 0);
+        const payment_status = refunded > 0 ? (paid === 0 ? 'Refunded' : 'Partially refunded') : paid >= order.total ? 'Paid' : paid > 0 ? 'Partially paid' : 'Unpaid';
+        const outstanding = Math.max(0, order.total - paid - refunded);
+        
+        return {
+            ...safe,
+            paid,
+            refunded,
+            payment_status,
+            outstanding,
+            customer_code: isStaffActor ? undefined : customer_code,
+            driver: order.driver ? JSON.parse(order.driver) : null,
+            items: itemsByOrder.get(order.id) || [],
+            history: historyByOrder.get(order.id) || [],
+            payments
+        };
+    });
 }
 export async function changeStatus(actor: Actor, orderId: string, status: string, code = '', note = '') {
     permit(actor, ['admin', 'sales', 'delivery']);

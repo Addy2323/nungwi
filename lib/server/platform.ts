@@ -152,31 +152,36 @@ export async function staffData(actor: Actor, resource: string) {
     }
     if (resource === 'hotels') {
         permit(actor, ['admin']);
-        return (await Promise.all((await all('SELECT * FROM hotels ORDER BY name')).map(async (h) => {
+        const hotels = await all('SELECT * FROM hotels ORDER BY name');
+        if (hotels.length === 0) return [];
+        const [balances, purchases, verified] = await Promise.all([
+            all('SELECT hotel_id, COALESCE(SUM(earned-paid),0) AS value FROM commissions GROUP BY hotel_id'),
+            all("SELECT hotel_id, COALESCE(SUM(total),0) AS value FROM orders WHERE status NOT IN ('Cancelled','Returned') GROUP BY hotel_id"),
+            all('SELECT DISTINCT hotel_id, phone FROM users WHERE phone_verified=1 AND hotel_id IS NOT NULL')
+        ]);
+        const balanceMap = new Map(balances.map(b => [b.hotel_id, Number(b.value)]));
+        const purchaseMap = new Map(purchases.map(p => [p.hotel_id, Number(p.value)]));
+        const verifiedSet = new Set(verified.map(v => `${v.hotel_id}:${v.phone}`));
+        return hotels.map(h => {
             let rule = h.rule;
-            if (typeof rule === 'string') {
-                try { rule = JSON.parse(rule); } catch {}
-            }
-            if (typeof rule === 'string') {
-                try { rule = JSON.parse(rule); } catch {}
-            }
-            if (!rule || typeof rule !== 'object') {
-                rule = { method: 'percentage', value: 0, scope: 'referral', tiers: [] };
-            }
+            if (typeof rule === 'string') { try { rule = JSON.parse(rule); } catch {} }
+            if (typeof rule === 'string') { try { rule = JSON.parse(rule); } catch {} }
+            if (!rule || typeof rule !== 'object') rule = { method: 'percentage', value: 0, scope: 'referral', tiers: [] };
             return {
                 ...h,
                 rule,
-                balance: (await one('SELECT COALESCE(SUM(earned-paid),0) AS value FROM commissions WHERE hotel_id=?', h.id))!.value,
-                purchases: (await one("SELECT COALESCE(SUM(total),0) AS value FROM orders WHERE hotel_id=? AND status NOT IN ('Cancelled','Returned')", h.id))!.value,
-                phone_verified: !!(await one('SELECT id FROM users WHERE hotel_id=? AND phone=? AND phone_verified=1', h.id, h.phone))
+                balance: balanceMap.get(h.id) || 0,
+                purchases: purchaseMap.get(h.id) || 0,
+                phone_verified: verifiedSet.has(`${h.id}:${h.phone}`)
             };
-        })));
+        });
     }
     if (resource === 'users') {
         if (actor.role === 'hotel_manager')
             return (await all('SELECT * FROM users WHERE hotel_id=?', actor.hotel_id)).map(u => ({ ...publicUser(u), active: u.active, invited: !u.password }));
         permit(actor, ['admin']);
-        return (await Promise.all((await all('SELECT * FROM users ORDER BY created_at DESC')).map(async (u) => ({ ...publicUser(u), active: u.active, invited: !u.password, purchases: (await one('SELECT COALESCE(SUM(total),0) AS value FROM orders WHERE user_id=?', u.id))!.value }))));
+        const rows = await all(`SELECT u.*, COALESCE(SUM(o.total),0) AS purchases FROM users u LEFT JOIN orders o ON o.user_id=u.id GROUP BY u.id ORDER BY u.created_at DESC`);
+        return rows.map(u => ({ ...publicUser(u), active: u.active, invited: !u.password, purchases: Number(u.purchases) }));
     }
     if (resource === 'promotions') {
         permit(actor, ['admin', 'sales']);

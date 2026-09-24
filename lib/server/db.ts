@@ -37,14 +37,22 @@ export function postgresSql(sql: string) {
 export async function all(sql: string, ...args: any[]): Promise<Row[]> { return (await (transaction.getStore() || db()).query(postgresSql(sql), args)).rows }
 export async function one(sql: string, ...args: any[]): Promise<Row | undefined> { return (await all(sql, ...args))[0] }
 export async function run(sql: string, ...args: any[]) { const result = await (transaction.getStore() || db()).query(postgresSql(sql), args); return { changes: result.rowCount ?? 0 } }
-export async function atomic<T>(fn: () => Promise<T>): Promise<T> {
+
+function stringHash(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0 }
+  return Math.abs(hash)
+}
+
+export async function atomic<T>(fn: () => Promise<T>, lockKey: string | number = 184733): Promise<T> {
   if (transaction.getStore()) return fn()
   const client = await db().connect()
   try {
     await client.query('BEGIN')
-    // Preserve SQLite's serialized write semantics across processes for stock, refunds,
-    // invitation redemption and outbox claims. Acquire before any business-data reads.
-    await client.query('SELECT pg_advisory_xact_lock(184733, 1)')
+    if (lockKey !== 0) {
+      const lockId = typeof lockKey === 'number' ? lockKey : stringHash(lockKey)
+      await client.query(`SELECT pg_advisory_xact_lock(${lockId}, 1)`)
+    }
     const result = await transaction.run(client, fn)
     await client.query('COMMIT')
     return result

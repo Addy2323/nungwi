@@ -31,7 +31,7 @@ export async function reportRows(actor: Actor, type: string, from: string, to: s
         quantity: number;
         sales: number;
     }> = {};
-    orders.forEach(o => o.items.forEach(i => { const p = products[i.product_id] || (products[i.product_id] = { name: i.name, quantity: 0, sales: 0 }); p.quantity += i.quantity; p.sales += i.quantity * i.unit_price; }));
+    orders.forEach(o => o.items.forEach((i: any) => { const p = products[i.product_id] || (products[i.product_id] = { name: i.name, quantity: 0, sales: 0 }); p.quantity += i.quantity; p.sales += i.quantity * i.unit_price; }));
     return { title: 'Product performance (before order discounts)', headers: ['Product', 'Selling units', 'Gross product sales TZS'], rows: [...Object.values(products).map(p => [p.name, p.quantity, p.sales]), ['TOTAL', Object.values(products).reduce((s, p) => s + p.quantity, 0), Object.values(products).reduce((s, p) => s + p.sales, 0)]] };
 }
 export function csvReport(report: Awaited<ReturnType<typeof reportRows>>) { return '\uFEFF' + [report.headers, ...report.rows].map(row => row.map(value => { let text = String(value); if (typeof value === 'string' && /^[=+@\-\t\r]/.test(text))

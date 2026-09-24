@@ -14,6 +14,7 @@ import { adjustStock, assignDriver, catalogue, changeStatus, commissionAmount, l
 import { accountData, importProducts, deleteProduct, invite, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion, staffData } from '@/lib/server/platform';
 import { deliveryConfigured, processNotifications, queue, refreshSms } from '@/lib/server/notifications';
 import { csvReport, pdfReport, reportRows } from '@/lib/server/reports';
+import { getCached, setCached, invalidateCache } from '@/lib/server/cache';
 import { storeInfo } from '@/lib/store-info';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,10 +39,22 @@ export async function GET(request: Request) {
         const actor = await currentUser();
         if (resource === 'store-info')
             return NextResponse.json({ data: storeInfo() });
-        if (resource === 'catalogue')
-            return NextResponse.json({ data: (await publicCatalogue(actor)) });
-        if (resource === 'promotions-public')
-            return NextResponse.json({ data: (await all("SELECT * FROM promotions WHERE active=1 AND starts_at<=? AND ends_at>? AND (audience='all' OR audience=?)", now(), now(), actor?.hotel_id ? 'hotel' : 'customer')).map(p => ({ ...p, product_ids: JSON.parse(p.product_ids) })) });
+        if (resource === 'catalogue') {
+            const cacheKey = `catalogue:${actor?.role || 'public'}:${actor?.hotel_id || 'none'}`;
+            const cached = getCached<any>(cacheKey);
+            if (cached) return NextResponse.json({ data: cached });
+            const data = await publicCatalogue(actor);
+            setCached(cacheKey, data, 15000);
+            return NextResponse.json({ data });
+        }
+        if (resource === 'promotions-public') {
+            const cacheKey = `promotions:${actor?.hotel_id || 'customer'}`;
+            const cached = getCached<any>(cacheKey);
+            if (cached) return NextResponse.json({ data: cached });
+            const data = (await all("SELECT * FROM promotions WHERE active=1 AND starts_at<=? AND ends_at>? AND (audience='all' OR audience=?)", now(), now(), actor?.hotel_id ? 'hotel' : 'customer')).map(p => ({ ...p, product_ids: JSON.parse(p.product_ids) }));
+            setCached(cacheKey, data, 15000);
+            return NextResponse.json({ data });
+        }
         if (resource === 'me')
             return NextResponse.json({ data: actor });
         if (resource === 'checkout-config')
@@ -353,8 +366,9 @@ export async function POST(request: Request) {
             (await run('INSERT INTO expenses VALUES (?,?,?,?,?)', id(), input.amount, input.description, input.date, actor.id));
             (await audit(actor.id, 'expense.recorded', 'expense', 'store', input));
         }
-        else
-            throw new AppError('Action not found.', 404);
+        if (['product.save', 'product.delete', 'category.save', 'stock.receive', 'stock.adjust', 'promotion.save'].includes(action)) {
+            invalidateCache();
+        }
         return NextResponse.json({ data: result });
     }
     catch (error) {

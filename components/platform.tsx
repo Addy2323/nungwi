@@ -48,12 +48,12 @@ export default function Platform({user}:{user:Actor}) {
   const dialog=useRef<HTMLDialogElement>(null)
   const range={from:new Date(`${from}T00:00:00`).toISOString(),to:new Date(new Date(`${to}T00:00:00`).getTime()+86400000).toISOString()}
   const refresh=()=>setRevision(v=>v+1)
-  useEffect(()=>{if(!['Overview','Orders','My Orders','Notifications'].includes(tab))return;const timer=setInterval(()=>{if(!document.hidden&&!form&&!selected)refresh()},10000);return()=>clearInterval(timer)},[tab,form,selected])
-  const go=(name:string)=>{setTab(name);setMenu(false);setSearch('');setError('')}
-  useEffect(()=>{let cancelled=false;setLoading(true);setError('');setData(null)
+  useEffect(()=>{if(!['Overview','Orders','My Orders','Notifications'].includes(tab))return;const timer=setInterval(()=>{if(!document.hidden&&!form&&!selected)refresh()},30000);return()=>clearInterval(timer)},[tab,form,selected])
+  const go=(name:string)=>{setTab(name);setMenu(false);setSearch('');setError('');setData(null)}
+  useEffect(()=>{let cancelled=false;if(!data){setLoading(true);setError('')}
     if(tab==='ERP'||tab==='Products'){setLoading(false);setData({});return()=>{cancelled=true}}
     const resources:Record<string,string>={'Overview':'overview','Orders':'orders','My Orders':'orders','Products':'products','Inventory':'inventory','Customers & Staff':'users','Hotel Staff':'users','Hotels':'hotels','Drivers':'drivers','Promotions':'promotions','Offers':'promotions-public','Commissions':'commissions','Notifications':'notifications','Audit':'audit','Settings':'settings','Account':'account','Addresses':'account','Favourites':'account','Support':isStaff?'support':'account','Reports':'overview'}
-    Promise.all([api(resources[tab]||'overview',range),tab==='Favourites'?api<R[]>('catalogue'):Promise.resolve([]),api<R>('account'),allowed(['admin','sales'])?api<R[]>('drivers'):Promise.resolve([]),admin?api<R[]>('hotels'):Promise.resolve([])]).then(([main,products,profile,driverRows,hotelRows])=>{if(cancelled)return;setData(main);setCatalog(products);setAccount(profile);setDrivers(driverRows);setHotels(hotelRows)}).catch(e=>{if(!cancelled)setError(e.message)}).finally(()=>{if(!cancelled)setLoading(false)})
+    Promise.all([api(resources[tab]||'overview',range),tab==='Favourites'?api<R[]>('catalogue'):Promise.resolve([]),api<R>('account'),allowed(['admin','sales'])?api<R[]>('drivers'):Promise.resolve([]),admin?api<R[]>('hotels'):Promise.resolve([])]).then(([main,products,profile,driverRows,hotelRows])=>{if(cancelled)return;setData(main);setCatalog(products);setAccount(profile);setDrivers(driverRows);setHotels(hotelRows);setError('')}).catch(e=>{if(!cancelled&&!data)setError(e.message)}).finally(()=>{if(!cancelled)setLoading(false)})
     return()=>{cancelled=true}
   // range is represented by its primitive dates to avoid refetching on every render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
