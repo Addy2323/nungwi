@@ -1,3 +1,5 @@
+import { searchProducts, catalogueOptions, saveCategory } from '@/lib/server/product-catalogue'
+import { NO_EXPIRY } from '@/lib/product-workflow'
 import { requestOtp, verifyOtp } from '@/lib/server/otp'
 import { eachAsync } from '@/lib/server/db'
 import { NextResponse, after } from 'next/server';
@@ -9,7 +11,7 @@ import { all, atomic, audit, id, now, one, run, type Row } from '@/lib/server/db
 import { AppError, createSession, currentUser, hash, logout, originGuard, passwordHash, passwordMatches, permit, publicUser, redeemToken, requireUser, roles, staff, throttle, tokenFor } from '@/lib/server/auth';
 import { date, money, phone, quantity, text } from '@/lib/server/validation';
 import { adjustStock, assignDriver, catalogue, changeStatus, commissionAmount, listOrders, orderDetails, payout, placeOrder, receiveStock, recordPayment } from '@/lib/server/orders';
-import { accountData, deleteProduct, invite, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion, staffData } from '@/lib/server/platform';
+import { accountData, importProducts, deleteProduct, invite, overview, publicCatalogue, saveDriver, saveHotel, saveProduct, savePromotion, staffData } from '@/lib/server/platform';
 import { deliveryConfigured, processNotifications, queue, refreshSms } from '@/lib/server/notifications';
 import { csvReport, pdfReport, reportRows } from '@/lib/server/reports';
 import { storeInfo } from '@/lib/store-info';
@@ -50,6 +52,8 @@ export async function GET(request: Request) {
         const to = date.parse(url.searchParams.get('to') || '2999-01-01T00:00:00.000Z');
         if (to <= from)
             throw new AppError('Choose a valid date range.');
+        if (resource === 'product-search') return NextResponse.json({ data: await searchProducts(actor,Object.fromEntries(url.searchParams)) });
+        if (resource === 'catalogue-options') return NextResponse.json({ data: await catalogueOptions(actor) });
         if (resource === 'account')
             return NextResponse.json({ data: (await accountData(actor)) });
         if (resource === 'overview')
@@ -178,6 +182,8 @@ export async function POST(request: Request) {
             const input = z.object({ id: text, amount: money.refine(v => v > 0), kind: z.enum(['payment', 'refund']), method: z.enum(['cash', 'bank_transfer', 'card', 'deposit_return']), reference: text }).parse(body);
             result = (await recordPayment(actor, input.id, input));
         }
+        else if (action === 'product.import') result = await importProducts(actor,body);
+        else if (action === 'category.save') result = await saveCategory(actor,body);
         else if (action === 'product.save')
             result = (await saveProduct(actor, body));
         else if (action === 'product.delete') {
@@ -185,7 +191,7 @@ export async function POST(request: Request) {
             result = (await deleteProduct(actor, input.id));
         }
         else if (action === 'stock.receive') {
-            const input = z.object({ product_id: text, label: text, expires_at: date, quantity, cost: money, reason: text }).parse(body);
+            const input = z.object({ product_id: text, label: text, expires_at: date.nullish(), quantity, cost: money, reason: text }).parse(body);
             result = (await receiveStock(actor, input));
         }
         else if (action === 'stock.adjust') {

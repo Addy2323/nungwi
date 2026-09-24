@@ -34,7 +34,7 @@ before(async () => {
   await client.connect()
   await client.query(`CREATE SCHEMA ${schema}`); created = true
   await client.query(`SET search_path TO ${schema},pg_catalog`)
-  for (const migration of ['001_postgres','002_money_capacity','005_erp_foundation','006_sms_notifications']) await client.query(readFileSync(`migrations/${migration}.sql`, 'utf8'))
+  for (const migration of ['001_postgres','002_money_capacity','005_erp_foundation','006_sms_notifications','007_product_workflow']) await client.query(readFileSync(`migrations/${migration}.sql`, 'utf8'))
   admin = await actor('admin'); customer = await actor('customer')
   product = id()
   await run('INSERT INTO products(id,name,category,price,sku,created_at) VALUES (?,?,?,?,?,?)', product, 'ERP drink', 'Beer', 200, id(), now())

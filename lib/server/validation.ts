@@ -1,3 +1,4 @@
+import { PRODUCT_UNITS } from '../product-workflow'
 import { normalizePhone } from '../phone-number'
 import { z } from 'zod'
 export const text = z.string().trim().min(1).max(500)
@@ -16,7 +17,7 @@ export const unitsInput = z.preprocess((val) => {
 }, z.array(z.object({unit:z.string().min(1).max(30),unit_size:quantity,price:money,hotel_price:money.nullable().default(null),deposit:money.default(0)})).max(6).default([]))
 
 export const date = z.string().datetime({ offset:true }).transform(value=>new Date(value).toISOString())
-const image = z.string().max(500000).refine(value => value === '' || value.startsWith('/images/') || value.startsWith('/uploads/') || value.startsWith('data:image/') || /^https?:\/\/[^\s]+$/.test(value),'Use an uploaded image or HTTPS image URL.')
+const image = z.string().max(500000).refine(value => value === '' || value === '/logo.png' || value.startsWith('/images/') || value.startsWith('/uploads/') || value.startsWith('data:image/') || /^https?:\/\/[^\s]+$/.test(value),'Use an uploaded image or HTTPS image URL.')
 export const drinkTypeEnum = z.enum(['ALCOHOLIC', 'NON_ALCOHOLIC'])
 export const codeTypeEnum = z.enum(['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'QR', 'INTERNAL_QR'])
 
@@ -28,12 +29,13 @@ export const productInput = z.object({
   description: z.string().max(3000).default(''),
   image: image.default('/logo.png'),
   volume: z.string().max(50).default(''),
-  unit: z.enum(['bottle','can','pack','carton','crate']).default('bottle'),
+  unit: z.enum(PRODUCT_UNITS).default('bottle'),
   unit_size: z.preprocess((val) => (val === null || val === '' || val === undefined ? 1 : Number(val)), quantity.default(1)),
   price: z.preprocess((val) => (val === null || val === '' || val === undefined ? 0 : Number(val)), money),
   hotel_price: z.preprocess((val) => (val === null || val === '' || val === undefined ? null : Number(val)), money.nullable().default(null)),
   cost: z.preprocess((val) => (val === null || val === '' || val === undefined ? 0 : Number(val)), money.default(0)),
-  sku: text,
+  sku: z.string().trim().max(100).default(''),
+  track_expiry: z.boolean().default(true),
   reorder_level: z.preprocess((val) => (val === null || val === '' || val === undefined ? 10 : Number(val)), money.default(10)),
   min_qty: z.preprocess((val) => (val === null || val === '' || val === undefined ? 1 : Number(val)), quantity.default(1)),
   deposit: z.preprocess((val) => (val === null || val === '' || val === undefined ? 0 : Number(val)), money.default(0)),

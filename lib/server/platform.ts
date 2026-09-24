@@ -11,18 +11,31 @@ export async function publicCatalogue(actor: Actor | null): Promise<Row[]> {
 export async function saveProduct(actor: Actor, raw: unknown) {
     permit(actor, ['admin', 'stock']);
     const input = productInput.parse(raw);
+    if (!input.sku) input.sku = 'PRD-' + id();
     const productId = input.id || id();
     const units = unitsInput.parse((raw as Row).units);
     if (new Set([input.unit, ...units.map(unit => unit.unit)]).size !== units.length + 1)
         throw new AppError('Selling unit names must be unique.');
     return (await atomic(async () => {
         const old = (await one('SELECT * FROM products WHERE id=?', productId));
+        if (input.id && !old) throw new AppError('Product not found.', 404);
+        const barcode = input.barcode?.trim() || null;
+        if (barcode) {
+            const duplicate = await one('SELECT id,name FROM products WHERE barcode=? AND id<>? UNION ALL SELECT p.id,p.name FROM product_codes c JOIN products p ON p.id=c.product_id WHERE c.code=? AND p.id<>? LIMIT 1', barcode,productId,barcode,productId);
+            if (duplicate) throw new AppError(`This barcode belongs to ${duplicate.name}. Use the existing product.`,409);
+        }
+        const category = await one('SELECT * FROM drink_categories WHERE lower(name)=lower(?)',input.category);
+        if (category && !category.active && old?.category !== input.category) throw new AppError('Choose an active category.');
+        if (!category) await run("INSERT INTO drink_categories(id,name,type,icon,created_at) VALUES (?,?,'NON_ALCOHOLIC','',?)",id(),input.category,now());
+
         if (old && old.unit_size !== input.unit_size && (await one('SELECT id FROM batches WHERE product_id=? AND (remaining>0 OR reserved>0)', productId)))
             throw new AppError('Archive this product and create a new SKU to change its unit conversion while stock exists.');
         if (old && old.active && !input.active && (await one("SELECT a.id FROM allocations a JOIN order_items i ON i.id=a.item_id WHERE i.product_id=? AND a.state='reserved'", productId)))
             throw new AppError('Resolve reserved orders before archiving this product.');
         (await run(`INSERT INTO products (id,name,brand,category,description,image,volume,unit,unit_size,price,hotel_price,cost,sku,reorder_level,min_qty,deposit,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,brand=excluded.brand,category=excluded.category,description=excluded.description,image=excluded.image,volume=excluded.volume,unit=excluded.unit,unit_size=excluded.unit_size,price=excluded.price,hotel_price=excluded.hotel_price,cost=excluded.cost,sku=excluded.sku,reorder_level=excluded.reorder_level,min_qty=excluded.min_qty,deposit=excluded.deposit,active=excluded.active`, productId, input.name, input.brand, input.category, input.description, input.image, input.volume, input.unit, input.unit_size, input.price, input.hotel_price, input.cost, input.sku, input.reorder_level, input.min_qty, input.deposit, Number(input.active), old?.created_at || now()));
-        (await run('UPDATE products SET units=? WHERE id=?', JSON.stringify(units), productId));
+        await run('UPDATE products SET units=?,barcode=?,barcode_type=?,track_expiry=?,variant=?,flavor=?,manufacturer=?,country_of_origin=?,packaging=? WHERE id=?', JSON.stringify(units),barcode,input.barcode_type || 'CODE_128',Number(input.track_expiry),input.variant,input.flavor,input.manufacturer,input.country_of_origin,input.packaging,productId);
+        if (old?.barcode && old.barcode !== barcode) await run("DELETE FROM product_codes WHERE product_id=? AND code=? AND source='product-form'",productId,old.barcode);
+        if (barcode) await run("INSERT INTO product_codes(id,product_id,code,code_type,is_primary,source,created_at) VALUES (?,?,?,?,1,'product-form',?) ON CONFLICT(code) DO NOTHING",id(),productId,barcode,input.barcode_type || 'CODE_128',now());
         (await audit(actor.id, 'product.saved', 'product', productId, { before: old || null, after: { ...input, units } }));
         return productId;
     }));
@@ -38,20 +51,9 @@ export async function deleteProduct(actor: Actor, productId: string) {
             throw new AppError('Cannot delete product: it is included in an active customer order in progress.');
         }
 
-        const hasCodesTable = await one("SELECT 1 FROM information_schema.tables WHERE table_name='product_codes'");
-        if (hasCodesTable) {
-            await run('DELETE FROM product_codes WHERE product_id=?', productId);
-        }
-
-        await run('DELETE FROM favourites WHERE product_id=?', productId);
-        await run('DELETE FROM stock_movements WHERE product_id=?', productId);
-        await run('DELETE FROM allocations WHERE item_id IN (SELECT id FROM order_items WHERE product_id=?)', productId);
-        await run('DELETE FROM batches WHERE product_id=?', productId);
-        await run('DELETE FROM order_items WHERE product_id=?', productId);
-
-        await run('DELETE FROM products WHERE id=?', productId);
-        await audit(actor.id, 'product.deleted', 'product', productId, { before: old });
-        return { success: true, id: productId, action: 'deleted' };
+        await run('UPDATE products SET active=0 WHERE id=?',productId);
+        await audit(actor.id, 'product.archived', 'product', productId, { before: old });
+        return { success: true, id: productId, action: 'archived' };
     }));
 }
 export async function saveHotel(actor: Actor, raw: unknown) {
@@ -205,4 +207,32 @@ export async function staffData(actor: Actor, resource: string) {
         return { values: Object.fromEntries((await all('SELECT * FROM settings')).map(r => [r.key, r.value])), smsConfigured: deliveryConfigured('sms'), emailConfigured: deliveryConfigured('email'), expenses: (await all('SELECT * FROM expenses ORDER BY date DESC')) };
     }
     throw new AppError('Resource not found.', 404);
+}
+
+export async function importProducts(actor: Actor, raw: unknown) {
+    permit(actor, ['admin','stock']);
+    const input = z.object({ rows:z.array(z.record(z.string(),z.unknown())).min(1).max(100), confirm:z.boolean().default(false) }).parse(raw);
+    return atomic(async () => {
+        const errors:string[]=[];
+        const codes=new Set<string>(); const names=new Set<string>();
+        const products:Record<string,any>[]=[];
+        for(let index=0;index<input.rows.length;index++) {
+            const parsed=productInput.safeParse(input.rows[index]);
+            if(!parsed.success){errors.push(`Row ${index+2}: ${parsed.error.issues.map(i=>`${i.path.join('.')}: ${i.message}`).join('; ')}`);continue;}
+            const product=parsed.data;
+            if(product.id) {errors.push(`Row ${index+2}: imports create new products only.`);continue;}
+            const name=product.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+            if(names.has(name)||await one("SELECT id FROM products WHERE regexp_replace(lower(name),'[^[:alnum:]]','','g')=?",name))errors.push(`Row ${index+2}: a similar product name already exists. Add it individually to review.`);
+            names.add(name);
+            if(product.barcode){
+                if(codes.has(product.barcode)||await one('SELECT id FROM products WHERE barcode=? UNION ALL SELECT product_id AS id FROM product_codes WHERE code=?',product.barcode,product.barcode))errors.push(`Row ${index+2}: barcode already in use.`);
+                codes.add(product.barcode);
+            }
+            if(product.sku&&await one('SELECT id FROM products WHERE sku=?',product.sku))errors.push(`Row ${index+2}: SKU already in use.`);
+            products.push(product);
+        }
+        if(errors.length||!input.confirm)return {errors,count:products.length};
+        for(const product of products)await saveProduct(actor,product);
+        return {errors:[],count:products.length};
+    });
 }

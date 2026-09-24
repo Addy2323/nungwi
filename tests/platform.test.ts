@@ -25,6 +25,7 @@ async function setupDatabase() {
  await testAdmin.query(readFileSync('migrations/001_postgres.sql', 'utf8'))
  await testAdmin.query(readFileSync('migrations/002_money_capacity.sql', 'utf8'))
  await testAdmin.query(readFileSync('migrations/006_sms_notifications.sql', 'utf8'))
+ await testAdmin.query(readFileSync('migrations/007_product_workflow.sql', 'utf8'))
 }
 after(async () => {
  await closeDb()
@@ -118,16 +119,18 @@ describe('secure links, outbox, exports and recovery', () => {
       assert.equal(results.filter(r=>r.status==='fulfilled').length,1)
       assert.equal((await catalogue()).find(row=>row.id===p)!.available,0)
     })
-    it('completely deletes products and their related records', async () => {
+    it('archives products while preserving stock history', async () => {
       const unusedP = await product();
       const delResult = await deleteProduct(admin, unusedP);
-      assert.equal(delResult.action, 'deleted');
+      assert.equal(delResult.action, 'archived');
 
       const usedP = await product();
       await stockIn(usedP, 5);
       const delResult2 = await deleteProduct(admin, usedP);
-      assert.equal(delResult2.action, 'deleted');
+      assert.equal(delResult2.action, 'archived');
       assert.equal((await catalogue()).find(row => row.id === usedP), undefined);
+      assert.equal((await one('SELECT remaining FROM batches WHERE product_id=?',usedP))!.remaining,5);
+      assert.ok(await one('SELECT id FROM stock_movements WHERE product_id=?',usedP));
     })
     it('rejects invalid roles, duplicate emails and orphaned foreign keys', async () => {
       await assert.rejects(run('UPDATE users SET role=? WHERE id=?','invalid_role',customer.id), /invalid input value for enum/)

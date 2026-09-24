@@ -20,7 +20,7 @@ const originalFetch=globalThis.fetch
 let mode='success',calls=0
 before(async()=>{
  await admin.connect();await admin.query(`CREATE SCHEMA ${schema}`);await admin.query(`SET search_path TO ${schema},pg_catalog`)
- for(const migration of ['001_postgres','002_money_capacity','006_sms_notifications'])await admin.query(readFileSync(`migrations/${migration}.sql`,'utf8'))
+ for(const migration of ['001_postgres','002_money_capacity','006_sms_notifications','007_product_workflow'])await admin.query(readFileSync(`migrations/${migration}.sql`,'utf8'))
  globalThis.fetch=async(input,init)=>{
   calls++
   assert.ok(String(input).startsWith('https://macksms.co.tz/portal/api/'))

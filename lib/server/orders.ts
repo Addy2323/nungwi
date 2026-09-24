@@ -1,3 +1,4 @@
+import { NO_EXPIRY } from '../product-workflow'
 import { eachAsync } from './db'
 import { randomBytes, randomInt } from 'node:crypto';
 import { all, atomic, audit, id, now, one, run, setting, type Row } from './db';
@@ -283,16 +284,19 @@ export async function recordPayment(actor: Actor, orderId: string, input: {
 export async function receiveStock(actor: Actor, input: {
     product_id: string;
     label: string;
-    expires_at: string;
+    expires_at?: string | null;
     quantity: number;
     cost: number;
     reason: string;
 }) {
     permit(actor, ['admin', 'stock']);
-    if (input.expires_at <= now())
+    if (input.expires_at && input.expires_at <= now())
         throw new AppError('Receive usable stock with a future expiry date.');
     return (await atomic(async () => { if (!(await one('SELECT id FROM products WHERE id=?', input.product_id)))
-        throw new AppError('Product not found.'); const batch = id(); (await run('INSERT INTO batches VALUES (?,?,?,?,?,0,?,?)', batch, input.product_id, input.label, input.expires_at, input.quantity, input.cost, now())); (await movement(actor, input.product_id, batch, null, 'received', input.quantity, input.cost, input.reason)); (await audit(actor.id, 'stock.received', 'batch', batch, input)); return batch; }));
+        throw new AppError('Product not found.');
+        const product = (await one('SELECT track_expiry FROM products WHERE id=?',input.product_id))!;
+        if (product.track_expiry && !input.expires_at) throw new AppError('Enter an expiry date for this product.');
+        const batch = id(); (await run('INSERT INTO batches VALUES (?,?,?,?,?,0,?,?)', batch, input.product_id, input.label, input.expires_at || NO_EXPIRY, input.quantity, input.cost, now())); (await movement(actor, input.product_id, batch, null, 'received', input.quantity, input.cost, input.reason)); (await audit(actor.id, 'stock.received', 'batch', batch, input)); return batch; }));
 }
 export async function adjustStock(actor: Actor, input: {
     batch_id: string;

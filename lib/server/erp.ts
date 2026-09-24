@@ -41,7 +41,7 @@ export async function erpData(actor: Actor) {
     .map((i): Row => ({ ...i, balance: ['Cancelled', 'Returned'].includes(i.order_status) ? 0 : outstanding(i.total, i.paid), aging: ['Cancelled', 'Returned'].includes(i.order_status) ? 'Closed order' : agingBucket(i.due_date, outstanding(i.total, i.paid)) }))
   return {
     suppliers, purchases: purchases.map(p => ({ ...p, items: items.filter(i => i.purchase_id === p.id) })), bills, invoices,
-    products: await all('SELECT id,name,sku,cost FROM products WHERE active=1 ORDER BY name'),
+
     customers: await all("SELECT u.id,u.name,u.email,COALESCE(t.payment_days,0) AS payment_days FROM users u LEFT JOIN customer_terms t ON t.user_id=u.id WHERE u.role IN ('customer','hotel_manager','hotel_staff') ORDER BY u.name"),
     orders: await all("SELECT o.id,o.number,o.total,u.name AS customer FROM orders o JOIN users u ON u.id=o.user_id WHERE o.status NOT IN ('Cancelled','Returned') AND NOT EXISTS (SELECT 1 FROM customer_invoices i WHERE i.order_id=o.id) ORDER BY o.created_at DESC"),
     receipts: await all('SELECT r.*,p.number AS purchase_number,x.name AS product FROM purchase_receipts r JOIN purchase_items i ON i.id=r.item_id JOIN purchase_orders p ON p.id=i.purchase_id JOIN products x ON x.id=i.product_id ORDER BY r.created_at DESC'),
